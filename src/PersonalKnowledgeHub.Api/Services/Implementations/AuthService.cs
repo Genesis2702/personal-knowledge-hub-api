@@ -157,7 +157,7 @@ namespace PersonalKnowledgeHub.Services.Implementations
 
         public async Task<AuthResponseDto> RefreshUser(RefreshRequestDto refreshRequest, CancellationToken cancellationToken)
         {
-            RefreshToken oldRefreshToken = await _tokenService.GetRefreshToken(refreshRequest.RefreshToken, cancellationToken);
+            RefreshToken oldRefreshToken = await _tokenService.GetRefreshTokenWithoutTracking(refreshRequest.RefreshToken, cancellationToken);
             User? user = await _userRepository.GetUserByIdAsync(oldRefreshToken.UserId, cancellationToken);
 
             if (user == null)

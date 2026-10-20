@@ -112,6 +112,16 @@ namespace PersonalKnowledgeHub.Services.Implementations
             return refreshToken;
         }
 
+        public async Task<RefreshToken> GetRefreshTokenWithoutTracking(string rawToken, CancellationToken cancellationToken)
+        {
+            byte[] binaryToken = Encoding.UTF8.GetBytes(rawToken);
+            byte[] hashedToken = SHA256.HashData(binaryToken);
+            string token = Convert.ToHexString(hashedToken);
+            RefreshToken? refreshToken = await _tokenRepository.GetRefreshTokenWithoutTrackingAsync(token, cancellationToken);
+            if (refreshToken == null) { throw new NotFoundException("Refresh token not found"); }
+            return refreshToken;
+        }
+
         public async Task CleanUpRefreshTokens(CancellationToken cancellationToken)
         {
             _logger.LogInformation("Refresh tokens cleaning up started");
