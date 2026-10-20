@@ -17,6 +17,7 @@ namespace PersonalKnowledgeHub.UnitTests;
 public class AuthServiceTests
 {
     private readonly Mock<IUserRepository> _userRepository;
+    private readonly Mock<ITokenRepository> _tokenRepository;
     private readonly Mock<ITokenService> _tokenService;
     private readonly Mock<IUnitOfWorkRepository> _unitOfWorkRepository;
     private readonly Mock<IMailFactoryService> _mailFactoryService;
@@ -31,6 +32,7 @@ public class AuthServiceTests
     {
         _verificationTokenRepository = new Mock<IVerificationTokenRepository>();
         _userRepository = new Mock<IUserRepository>();
+        _tokenRepository = new Mock<ITokenRepository>();
         _tokenService = new Mock<ITokenService>();
         _unitOfWorkRepository = new Mock<IUnitOfWorkRepository>();
         _mailFactoryService = new Mock<IMailFactoryService>();
@@ -40,7 +42,7 @@ public class AuthServiceTests
         _authService = new AuthService(_userRepository.Object, _tokenService.Object, _unitOfWorkRepository.Object,
             _mailFactoryService.Object,
             _verificationTokenService.Object, _backgroundJobClient.Object, NullLogger<AuthService>.Instance,
-            _metrics.Object, _verificationTokenRepository.Object);
+            _metrics.Object, _verificationTokenRepository.Object, _tokenRepository.Object);
     }
 
     [Fact]

@@ -15,6 +15,7 @@ namespace PersonalKnowledgeHub.Services.Implementations
     public class AuthService : IAuthService
     {
         private readonly IUserRepository _userRepository;
+        private readonly ITokenRepository _tokenRepository;
         private readonly ITokenService _tokenService;
         private readonly IUnitOfWorkRepository _unitOfWorkRepository;
         private readonly IMailFactoryService _mailFactoryService;
@@ -31,7 +32,7 @@ namespace PersonalKnowledgeHub.Services.Implementations
         public AuthService(IUserRepository userRepository, ITokenService tokenService, 
             IUnitOfWorkRepository unitOfWorkRepository, IMailFactoryService mailFactoryService, 
             IVerificationTokenService verificationTokenService, IBackgroundJobClient backgroundJobClient,
-            ILogger<AuthService> logger, IAppMetrics metrics, IVerificationTokenRepository verificationTokenRepository)
+            ILogger<AuthService> logger, IAppMetrics metrics, IVerificationTokenRepository verificationTokenRepository, ITokenRepository tokenRepository)
         {
             _userRepository = userRepository;
             _tokenService = tokenService;
@@ -42,6 +43,7 @@ namespace PersonalKnowledgeHub.Services.Implementations
             _logger = logger;
             _metrics = metrics;
             _verificationTokenRepository = verificationTokenRepository;
+            _tokenRepository = tokenRepository;
         }
 
         public bool IsEmailValid(string email)
@@ -242,6 +244,7 @@ namespace PersonalKnowledgeHub.Services.Implementations
             MailData passwordChangedMail = _mailFactoryService.CreatePasswordChangedMail(user);
             _backgroundJobClient.Enqueue<IMailService>(mailService => mailService.SendMail(passwordChangedMail));
             _logger.LogInformation("User {UserId} password changed successfully", user.Id);
+            await _tokenRepository.RevokeRefreshTokensByUserAsync(user.Id, cancellationToken);
         }
 
         public async Task VerifyPendingUser(string token, int userId, CancellationToken cancellationToken)
