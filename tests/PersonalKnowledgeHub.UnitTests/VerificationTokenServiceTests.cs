@@ -198,7 +198,7 @@ public class VerificationTokenServiceTests
             ExpiresAt = DateTime.UtcNow.AddDays(1),
             VerifiedAt = null,
             UserId = userId,
-            Purpose = Purpose.EmailVerification
+            Purpose = Purpose.PasswordReset
         };
         
         _verificationTokenRepository.Setup(x => x.GetVerificationTokenAsync(expectedToken, It.IsAny<CancellationToken>()))
@@ -250,7 +250,7 @@ public class VerificationTokenServiceTests
             ExpiresAt = DateTime.UtcNow.AddDays(-1),
             VerifiedAt = null,
             UserId = userId,
-            Purpose = Purpose.EmailVerification
+            Purpose = Purpose.PasswordReset
         };
         
         _verificationTokenRepository.Setup(x => x.GetVerificationTokenAsync(expectedToken, It.IsAny<CancellationToken>()))
@@ -278,7 +278,7 @@ public class VerificationTokenServiceTests
             ExpiresAt = DateTime.UtcNow.AddDays(1),
             VerifiedAt = DateTime.UtcNow,
             UserId = userId,
-            Purpose = Purpose.EmailVerification
+            Purpose = Purpose.PasswordReset
         };
         
         _verificationTokenRepository.Setup(x => x.GetVerificationTokenAsync(expectedToken, It.IsAny<CancellationToken>()))
