@@ -346,9 +346,24 @@ public class AuthServiceTests
     [Fact]
     public async Task RefreshUser_WhenRefreshTokenIsValid_ReturnsNewTokens()
     {
+        int userId = 1;
+        string userName = "test user";
+        string userEmail = "email@gmail.com";
+        string userPassword = "user password";
         string oldToken = "old refresh token";
         string newToken = "new refresh token";
         string accessToken = "access token";
+        
+        User user = new User
+        {
+            Id = userId,
+            UserName = userName,
+            Email = userEmail,
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword(userPassword),
+            Status = UserStatus.Active,
+            FailedLoginAttempts = 0,
+            LockedUntil = null
+        };
 
         RefreshRequestDto refreshRequest = new RefreshRequestDto
         {
@@ -361,7 +376,8 @@ public class AuthServiceTests
             Token = oldToken,
             Revoked = false,
             RevokedAt = null,
-            ReplacedByTokenId = null
+            ReplacedByTokenId = null,
+            UserId = userId
         };
 
         RefreshToken newRefreshToken = new RefreshToken
@@ -370,9 +386,14 @@ public class AuthServiceTests
             Token = newToken,
             Revoked = false,
             RevokedAt = null,
-            ReplacedByTokenId = null
+            ReplacedByTokenId = null,
+            UserId = userId
         };
 
+        _tokenService.Setup(x => x.GetRefreshToken(oldToken, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(oldRefreshToken);
+        _userRepository.Setup(x => x.GetUserByIdAsync(userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(user);
         _unitOfWorkRepository
             .Setup(x => x.ExecuteInTransactionAsync(
                 It.IsAny<Func<CancellationToken, Task<It.IsAnyType>>>(),
@@ -407,6 +428,8 @@ public class AuthServiceTests
         Assert.Equal(newToken, result.RefreshToken);
         Assert.Equal(accessToken, result.AccessToken);
         
+        _tokenService.Verify(x => x.GetRefreshToken(oldToken, It.IsAny<CancellationToken>()), Times.Once);
+        _userRepository.Verify(x => x.GetUserByIdAsync(userId, It.IsAny<CancellationToken>()), Times.Once);
         _unitOfWorkRepository.Verify(x => x.ExecuteInTransactionAsync(It.IsAny<Func<CancellationToken, Task<It.IsAnyType>>>(), It.IsAny<CancellationToken>()), Times.Once);
         _tokenService.Verify(x => x.ValidateRefreshToken(oldToken, It.IsAny<CancellationToken>()), Times.Once);
         _tokenService.Verify(x => x.GenerateRefreshToken(oldRefreshToken.UserId, It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Once);
@@ -425,29 +448,18 @@ public class AuthServiceTests
             RefreshToken = oldToken
         };
 
-        _unitOfWorkRepository
-            .Setup(x => x.ExecuteInTransactionAsync(
-                It.IsAny<Func<CancellationToken, Task<It.IsAnyType>>>(),
-                It.IsAny<CancellationToken>()))
-            .Returns(new InvocationFunc(invocation =>
-            {
-                var operation = (Delegate)invocation.Arguments[0];
-                var cancellationToken =
-                    (CancellationToken)invocation.Arguments[1];
-
-                return operation.DynamicInvoke(cancellationToken)!;
-            }));
-        _tokenService.Setup(x => x.ValidateRefreshToken(oldToken, It.IsAny<CancellationToken>()))
-            .ThrowsAsync(new NotFoundException("refresh token not found"));
+        _tokenService.Setup(x => x.GetRefreshToken(oldToken, It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new NotFoundException("Refresh token not found"));
         
         Func<Task> result = () => _authService.RefreshUser(refreshRequest, CancellationToken.None);
         
         await Assert.ThrowsAsync<NotFoundException>(result);
         
-        _unitOfWorkRepository.Verify(x => x.ExecuteInTransactionAsync(It.IsAny<Func<CancellationToken, Task<It.IsAnyType>>>(), It.IsAny<CancellationToken>()), Times.Once);
-        _tokenService.Verify(x => x.ValidateRefreshToken(oldToken, It.IsAny<CancellationToken>()), Times.Once);
+        _tokenService.Verify(x => x.GetRefreshToken(oldToken, It.IsAny<CancellationToken>()), Times.Once);
+        _userRepository.Verify(x => x.GetUserByIdAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()), Times.Never);
+        _unitOfWorkRepository.Verify(x => x.ExecuteInTransactionAsync(It.IsAny<Func<CancellationToken, Task<It.IsAnyType>>>(), It.IsAny<CancellationToken>()), Times.Never);
+        _tokenService.Verify(x => x.ValidateRefreshToken(oldToken, It.IsAny<CancellationToken>()), Times.Never);
         _tokenService.Verify(x => x.GenerateRefreshToken(It.IsAny<int>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
-        _tokenService.Verify(x => x.GetRefreshToken(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
         _tokenService.Verify(x => x.RevokeRefreshToken(It.IsAny<string>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()), Times.Never);
         _tokenService.Verify(x => x.GenerateAccessToken(It.IsAny<int>(), It.IsAny<CancellationToken>()), Times.Never);
     }
@@ -455,13 +467,42 @@ public class AuthServiceTests
     [Fact]
     public async Task RefreshUser_WhenUnauthorizedExceptionOccurs_ThrowsUnauthorizedException()
     {
+        int userId = 1;
+        string userName = "test user";
+        string userEmail = "email@gmail.com";
+        string userPassword = "user password";
         string oldToken = "old refresh token";
+        
+        User user = new User
+        {
+            Id = userId,
+            UserName = userName,
+            Email = userEmail,
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword(userPassword),
+            Status = UserStatus.Active,
+            FailedLoginAttempts = 0,
+            LockedUntil = null
+        };
 
         RefreshRequestDto refreshRequest = new RefreshRequestDto
         {
             RefreshToken = oldToken
         };
+        
+        RefreshToken oldRefreshToken = new RefreshToken
+        {
+            Id = 1,
+            Token = oldToken,
+            Revoked = false,
+            RevokedAt = null,
+            ReplacedByTokenId = null,
+            UserId = userId
+        };
 
+        _tokenService.Setup(x => x.GetRefreshToken(oldToken, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(oldRefreshToken);
+        _userRepository.Setup(x => x.GetUserByIdAsync(userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(user);
         _unitOfWorkRepository
             .Setup(x => x.ExecuteInTransactionAsync(
                 It.IsAny<Func<CancellationToken, Task<It.IsAnyType>>>(),
@@ -481,12 +522,54 @@ public class AuthServiceTests
         
         await Assert.ThrowsAsync<UnauthorizedException>(result);
         
+        _tokenService.Verify(x => x.GetRefreshToken(oldToken, It.IsAny<CancellationToken>()), Times.Once);
+        _userRepository.Verify(x => x.GetUserByIdAsync(userId, It.IsAny<CancellationToken>()), Times.Once);
         _unitOfWorkRepository.Verify(x => x.ExecuteInTransactionAsync(It.IsAny<Func<CancellationToken, Task<It.IsAnyType>>>(), It.IsAny<CancellationToken>()), Times.Once);
         _tokenService.Verify(x => x.ValidateRefreshToken(oldToken, It.IsAny<CancellationToken>()), Times.Once);
         _tokenService.Verify(x => x.GenerateRefreshToken(It.IsAny<int>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
-        _tokenService.Verify(x => x.GetRefreshToken(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
         _tokenService.Verify(x => x.RevokeRefreshToken(It.IsAny<string>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()), Times.Never);
         _tokenService.Verify(x => x.GenerateAccessToken(It.IsAny<int>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+    
+    [Fact]
+    public async Task RefreshUser_WhenUserIsBanned_ReturnsForbiddenException()
+    {
+        int userId = 1;
+        string oldToken = "old refresh token";
+        string newToken = "new refresh token";
+
+        RefreshRequestDto refreshRequest = new RefreshRequestDto
+        {
+            RefreshToken = oldToken
+        };
+
+        RefreshToken oldRefreshToken = new RefreshToken
+        {
+            Id = 1,
+            Token = oldToken,
+            Revoked = false,
+            RevokedAt = null,
+            ReplacedByTokenId = null,
+            UserId = userId
+        };
+
+        _tokenService.Setup(x => x.GetRefreshToken(oldToken, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(oldRefreshToken);
+        _userRepository.Setup(x => x.GetUserByIdAsync(userId, It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new ForbiddenException("Account is banned"));
+        
+        Func<Task> result = () => _authService.RefreshUser(refreshRequest, CancellationToken.None);
+        
+        await Assert.ThrowsAsync<ForbiddenException>(result);
+        
+        _tokenService.Verify(x => x.GetRefreshToken(oldToken, It.IsAny<CancellationToken>()), Times.Once);
+        _userRepository.Verify(x => x.GetUserByIdAsync(userId, It.IsAny<CancellationToken>()), Times.Once);
+        _unitOfWorkRepository.Verify(x => x.ExecuteInTransactionAsync(It.IsAny<Func<CancellationToken, Task<It.IsAnyType>>>(), It.IsAny<CancellationToken>()), Times.Never);
+        _tokenService.Verify(x => x.ValidateRefreshToken(oldToken, It.IsAny<CancellationToken>()), Times.Never);
+        _tokenService.Verify(x => x.GenerateRefreshToken(oldRefreshToken.UserId, It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
+        _tokenService.Verify(x => x.GetRefreshToken(newToken, It.IsAny<CancellationToken>()), Times.Never);
+        _tokenService.Verify(x => x.RevokeRefreshToken(oldToken, It.IsAny<int>(), It.IsAny<CancellationToken>()), Times.Never);
+        _tokenService.Verify(x => x.GenerateAccessToken(oldRefreshToken.UserId, It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]

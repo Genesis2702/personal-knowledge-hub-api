@@ -117,6 +117,12 @@ namespace PersonalKnowledgeHub.Services.Implementations
                 throw new UnauthorizedException("User not found");
             }
             activity?.SetTag("auth.user_found", true);
+            if (loggedInUser.Status == UserStatus.Banned)
+            {
+                _logger.LogWarning("Login attempt failed because user {UserId} is banned", loggedInUser.Id);
+                _metrics.LoginFailed();
+                throw new ForbiddenException("Account is banned");
+            }
             if (loggedInUser.LockedUntil != null && loggedInUser.LockedUntil > DateTime.UtcNow)
             {
                 _logger.LogWarning("Login attempt failed because user {UserId} is locked", loggedInUser.Id);
@@ -149,6 +155,19 @@ namespace PersonalKnowledgeHub.Services.Implementations
 
         public async Task<AuthResponseDto> RefreshUser(RefreshRequestDto refreshRequest, CancellationToken cancellationToken)
         {
+            RefreshToken oldRefreshToken = await _tokenService.GetRefreshToken(refreshRequest.RefreshToken, cancellationToken);
+            User? user = await _userRepository.GetUserByIdAsync(oldRefreshToken.UserId, cancellationToken);
+
+            if (user == null)
+            {
+                throw new NotFoundException("User not found");
+            }
+
+            if (user.Status == UserStatus.Banned)
+            {
+                throw new ForbiddenException("Account is banned");
+            }
+            
             RefreshTransactionResult result = await _unitOfWorkRepository.ExecuteInTransactionAsync(
                 async transactionCancellationToken =>
             {
