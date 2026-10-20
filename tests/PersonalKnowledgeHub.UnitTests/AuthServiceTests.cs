@@ -17,10 +17,12 @@ namespace PersonalKnowledgeHub.UnitTests;
 public class AuthServiceTests
 {
     private readonly Mock<IUserRepository> _userRepository;
+    private readonly Mock<ITokenRepository> _tokenRepository;
     private readonly Mock<ITokenService> _tokenService;
     private readonly Mock<IUnitOfWorkRepository> _unitOfWorkRepository;
     private readonly Mock<IMailFactoryService> _mailFactoryService;
     private readonly Mock<IVerificationTokenService> _verificationTokenService;
+    private readonly Mock<IVerificationTokenRepository>  _verificationTokenRepository;
     private readonly Mock<IBackgroundJobClient> _backgroundJobClient;
     private readonly Mock<IDbContextTransaction> _transaction = new();
     private readonly Mock<IAppMetrics> _metrics;
@@ -28,7 +30,9 @@ public class AuthServiceTests
     
     public AuthServiceTests()
     {
+        _verificationTokenRepository = new Mock<IVerificationTokenRepository>();
         _userRepository = new Mock<IUserRepository>();
+        _tokenRepository = new Mock<ITokenRepository>();
         _tokenService = new Mock<ITokenService>();
         _unitOfWorkRepository = new Mock<IUnitOfWorkRepository>();
         _mailFactoryService = new Mock<IMailFactoryService>();
@@ -38,7 +42,7 @@ public class AuthServiceTests
         _authService = new AuthService(_userRepository.Object, _tokenService.Object, _unitOfWorkRepository.Object,
             _mailFactoryService.Object,
             _verificationTokenService.Object, _backgroundJobClient.Object, NullLogger<AuthService>.Instance,
-            _metrics.Object);
+            _metrics.Object, _verificationTokenRepository.Object, _tokenRepository.Object);
     }
 
     [Fact]
@@ -80,7 +84,7 @@ public class AuthServiceTests
             .ReturnsAsync(refreshToken);
         _tokenService.Setup(x => x.GenerateAccessToken(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(accessToken);
-        _verificationTokenService.Setup(x => x.GenerateVerificationToken(userId, It.IsAny<CancellationToken>()))
+        _verificationTokenService.Setup(x => x.GenerateVerificationToken(userId, Purpose.EmailVerification, It.IsAny<CancellationToken>()))
             .ReturnsAsync(verificationToken);
         _mailFactoryService.Setup(x => x.CreateVerificationMail(It.Is<User>(u =>
             u.Email == registerRequest.Email && u.UserName == registerRequest.UserName), It.IsAny<string>()))
@@ -96,7 +100,7 @@ public class AuthServiceTests
             u.UserName == registerRequest.UserName && u.Email == registerRequest.Email), It.IsAny<CancellationToken>()), Times.Once);
         _tokenService.Verify(x => x.GenerateRefreshToken(userId, It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Once);
         _tokenService.Verify(x => x.GenerateAccessToken(userId, It.IsAny<CancellationToken>()), Times.Once);
-        _verificationTokenService.Verify(x => x.GenerateVerificationToken(userId, It.IsAny<CancellationToken>()), Times.Once);
+        _verificationTokenService.Verify(x => x.GenerateVerificationToken(userId, Purpose.EmailVerification, It.IsAny<CancellationToken>()), Times.Once);
         _mailFactoryService.Verify(x => x.CreateVerificationMail(It.Is<User>(u =>
             u.Email == registerRequest.Email && u.UserName == registerRequest.UserName), It.IsAny<string>()), Times.Once);
         _backgroundJobClient.Verify(x => x.Create(
@@ -131,7 +135,7 @@ public class AuthServiceTests
             u.UserName == registerRequest.UserName && u.Email == registerRequest.Email), It.IsAny<CancellationToken>()), Times.Never);
         _tokenService.Verify(x => x.GenerateRefreshToken(userId, Guid.NewGuid(), It.IsAny<CancellationToken>()), Times.Never);
         _tokenService.Verify(x => x.GenerateAccessToken(userId, It.IsAny<CancellationToken>()), Times.Never);
-        _verificationTokenService.Verify(x => x.GenerateVerificationToken(userId, It.IsAny<CancellationToken>()), Times.Never);
+        _verificationTokenService.Verify(x => x.GenerateVerificationToken(userId, Purpose.EmailVerification, It.IsAny<CancellationToken>()), Times.Never);
         _mailFactoryService.Verify(x => x.CreateVerificationMail(It.Is<User>(u =>
             u.Email == registerRequest.Email && u.UserName == registerRequest.UserName), It.IsAny<string>()), Times.Never);
         _backgroundJobClient.Verify(x => x.Create(
@@ -169,7 +173,7 @@ public class AuthServiceTests
             u.UserName == registerRequest.UserName && u.Email == registerRequest.Email), It.IsAny<CancellationToken>()), Times.Never);
         _tokenService.Verify(x => x.GenerateRefreshToken(userId, Guid.NewGuid(), It.IsAny<CancellationToken>()), Times.Never);
         _tokenService.Verify(x => x.GenerateAccessToken(userId, It.IsAny<CancellationToken>()), Times.Never);
-        _verificationTokenService.Verify(x => x.GenerateVerificationToken(userId, It.IsAny<CancellationToken>()), Times.Never);
+        _verificationTokenService.Verify(x => x.GenerateVerificationToken(userId, Purpose.EmailVerification, It.IsAny<CancellationToken>()), Times.Never);
         _mailFactoryService.Verify(x => x.CreateVerificationMail(It.Is<User>(u =>
             u.Email == registerRequest.Email && u.UserName == registerRequest.UserName), It.IsAny<string>()), Times.Never);
         _backgroundJobClient.Verify(x => x.Create(
@@ -344,9 +348,24 @@ public class AuthServiceTests
     [Fact]
     public async Task RefreshUser_WhenRefreshTokenIsValid_ReturnsNewTokens()
     {
+        int userId = 1;
+        string userName = "test user";
+        string userEmail = "email@gmail.com";
+        string userPassword = "user password";
         string oldToken = "old refresh token";
         string newToken = "new refresh token";
         string accessToken = "access token";
+        
+        User user = new User
+        {
+            Id = userId,
+            UserName = userName,
+            Email = userEmail,
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword(userPassword),
+            Status = UserStatus.Active,
+            FailedLoginAttempts = 0,
+            LockedUntil = null
+        };
 
         RefreshRequestDto refreshRequest = new RefreshRequestDto
         {
@@ -359,7 +378,8 @@ public class AuthServiceTests
             Token = oldToken,
             Revoked = false,
             RevokedAt = null,
-            ReplacedByTokenId = null
+            ReplacedByTokenId = null,
+            UserId = userId
         };
 
         RefreshToken newRefreshToken = new RefreshToken
@@ -368,9 +388,14 @@ public class AuthServiceTests
             Token = newToken,
             Revoked = false,
             RevokedAt = null,
-            ReplacedByTokenId = null
+            ReplacedByTokenId = null,
+            UserId = userId
         };
 
+        _tokenService.Setup(x => x.GetRefreshTokenWithoutTracking(oldToken, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(oldRefreshToken);
+        _userRepository.Setup(x => x.GetUserByIdAsync(userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(user);
         _unitOfWorkRepository
             .Setup(x => x.ExecuteInTransactionAsync(
                 It.IsAny<Func<CancellationToken, Task<It.IsAnyType>>>(),
@@ -405,6 +430,8 @@ public class AuthServiceTests
         Assert.Equal(newToken, result.RefreshToken);
         Assert.Equal(accessToken, result.AccessToken);
         
+        _tokenService.Verify(x => x.GetRefreshTokenWithoutTracking(oldToken, It.IsAny<CancellationToken>()), Times.Once);
+        _userRepository.Verify(x => x.GetUserByIdAsync(userId, It.IsAny<CancellationToken>()), Times.Once);
         _unitOfWorkRepository.Verify(x => x.ExecuteInTransactionAsync(It.IsAny<Func<CancellationToken, Task<It.IsAnyType>>>(), It.IsAny<CancellationToken>()), Times.Once);
         _tokenService.Verify(x => x.ValidateRefreshToken(oldToken, It.IsAny<CancellationToken>()), Times.Once);
         _tokenService.Verify(x => x.GenerateRefreshToken(oldRefreshToken.UserId, It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Once);
@@ -423,29 +450,18 @@ public class AuthServiceTests
             RefreshToken = oldToken
         };
 
-        _unitOfWorkRepository
-            .Setup(x => x.ExecuteInTransactionAsync(
-                It.IsAny<Func<CancellationToken, Task<It.IsAnyType>>>(),
-                It.IsAny<CancellationToken>()))
-            .Returns(new InvocationFunc(invocation =>
-            {
-                var operation = (Delegate)invocation.Arguments[0];
-                var cancellationToken =
-                    (CancellationToken)invocation.Arguments[1];
-
-                return operation.DynamicInvoke(cancellationToken)!;
-            }));
-        _tokenService.Setup(x => x.ValidateRefreshToken(oldToken, It.IsAny<CancellationToken>()))
-            .ThrowsAsync(new NotFoundException("refresh token not found"));
+        _tokenService.Setup(x => x.GetRefreshTokenWithoutTracking(oldToken, It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new NotFoundException("Refresh token not found"));
         
         Func<Task> result = () => _authService.RefreshUser(refreshRequest, CancellationToken.None);
         
         await Assert.ThrowsAsync<NotFoundException>(result);
         
-        _unitOfWorkRepository.Verify(x => x.ExecuteInTransactionAsync(It.IsAny<Func<CancellationToken, Task<It.IsAnyType>>>(), It.IsAny<CancellationToken>()), Times.Once);
-        _tokenService.Verify(x => x.ValidateRefreshToken(oldToken, It.IsAny<CancellationToken>()), Times.Once);
+        _tokenService.Verify(x => x.GetRefreshTokenWithoutTracking(oldToken, It.IsAny<CancellationToken>()), Times.Once);
+        _userRepository.Verify(x => x.GetUserByIdAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()), Times.Never);
+        _unitOfWorkRepository.Verify(x => x.ExecuteInTransactionAsync(It.IsAny<Func<CancellationToken, Task<It.IsAnyType>>>(), It.IsAny<CancellationToken>()), Times.Never);
+        _tokenService.Verify(x => x.ValidateRefreshToken(oldToken, It.IsAny<CancellationToken>()), Times.Never);
         _tokenService.Verify(x => x.GenerateRefreshToken(It.IsAny<int>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
-        _tokenService.Verify(x => x.GetRefreshToken(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
         _tokenService.Verify(x => x.RevokeRefreshToken(It.IsAny<string>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()), Times.Never);
         _tokenService.Verify(x => x.GenerateAccessToken(It.IsAny<int>(), It.IsAny<CancellationToken>()), Times.Never);
     }
@@ -453,13 +469,42 @@ public class AuthServiceTests
     [Fact]
     public async Task RefreshUser_WhenUnauthorizedExceptionOccurs_ThrowsUnauthorizedException()
     {
+        int userId = 1;
+        string userName = "test user";
+        string userEmail = "email@gmail.com";
+        string userPassword = "user password";
         string oldToken = "old refresh token";
+        
+        User user = new User
+        {
+            Id = userId,
+            UserName = userName,
+            Email = userEmail,
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword(userPassword),
+            Status = UserStatus.Active,
+            FailedLoginAttempts = 0,
+            LockedUntil = null
+        };
 
         RefreshRequestDto refreshRequest = new RefreshRequestDto
         {
             RefreshToken = oldToken
         };
+        
+        RefreshToken oldRefreshToken = new RefreshToken
+        {
+            Id = 1,
+            Token = oldToken,
+            Revoked = false,
+            RevokedAt = null,
+            ReplacedByTokenId = null,
+            UserId = userId
+        };
 
+        _tokenService.Setup(x => x.GetRefreshTokenWithoutTracking(oldToken, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(oldRefreshToken);
+        _userRepository.Setup(x => x.GetUserByIdAsync(userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(user);
         _unitOfWorkRepository
             .Setup(x => x.ExecuteInTransactionAsync(
                 It.IsAny<Func<CancellationToken, Task<It.IsAnyType>>>(),
@@ -479,12 +524,54 @@ public class AuthServiceTests
         
         await Assert.ThrowsAsync<UnauthorizedException>(result);
         
+        _tokenService.Verify(x => x.GetRefreshTokenWithoutTracking(oldToken, It.IsAny<CancellationToken>()), Times.Once);
+        _userRepository.Verify(x => x.GetUserByIdAsync(userId, It.IsAny<CancellationToken>()), Times.Once);
         _unitOfWorkRepository.Verify(x => x.ExecuteInTransactionAsync(It.IsAny<Func<CancellationToken, Task<It.IsAnyType>>>(), It.IsAny<CancellationToken>()), Times.Once);
         _tokenService.Verify(x => x.ValidateRefreshToken(oldToken, It.IsAny<CancellationToken>()), Times.Once);
         _tokenService.Verify(x => x.GenerateRefreshToken(It.IsAny<int>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
-        _tokenService.Verify(x => x.GetRefreshToken(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
         _tokenService.Verify(x => x.RevokeRefreshToken(It.IsAny<string>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()), Times.Never);
         _tokenService.Verify(x => x.GenerateAccessToken(It.IsAny<int>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+    
+    [Fact]
+    public async Task RefreshUser_WhenUserIsBanned_ReturnsForbiddenException()
+    {
+        int userId = 1;
+        string oldToken = "old refresh token";
+        string newToken = "new refresh token";
+
+        RefreshRequestDto refreshRequest = new RefreshRequestDto
+        {
+            RefreshToken = oldToken
+        };
+
+        RefreshToken oldRefreshToken = new RefreshToken
+        {
+            Id = 1,
+            Token = oldToken,
+            Revoked = false,
+            RevokedAt = null,
+            ReplacedByTokenId = null,
+            UserId = userId
+        };
+
+        _tokenService.Setup(x => x.GetRefreshTokenWithoutTracking(oldToken, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(oldRefreshToken);
+        _userRepository.Setup(x => x.GetUserByIdAsync(userId, It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new ForbiddenException("Account is banned"));
+        
+        Func<Task> result = () => _authService.RefreshUser(refreshRequest, CancellationToken.None);
+        
+        await Assert.ThrowsAsync<ForbiddenException>(result);
+        
+        _tokenService.Verify(x => x.GetRefreshTokenWithoutTracking(oldToken, It.IsAny<CancellationToken>()), Times.Once);
+        _userRepository.Verify(x => x.GetUserByIdAsync(userId, It.IsAny<CancellationToken>()), Times.Once);
+        _unitOfWorkRepository.Verify(x => x.ExecuteInTransactionAsync(It.IsAny<Func<CancellationToken, Task<It.IsAnyType>>>(), It.IsAny<CancellationToken>()), Times.Never);
+        _tokenService.Verify(x => x.ValidateRefreshToken(oldToken, It.IsAny<CancellationToken>()), Times.Never);
+        _tokenService.Verify(x => x.GenerateRefreshToken(oldRefreshToken.UserId, It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
+        _tokenService.Verify(x => x.GetRefreshToken(newToken, It.IsAny<CancellationToken>()), Times.Never);
+        _tokenService.Verify(x => x.RevokeRefreshToken(oldToken, It.IsAny<int>(), It.IsAny<CancellationToken>()), Times.Never);
+        _tokenService.Verify(x => x.GenerateAccessToken(oldRefreshToken.UserId, It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -583,7 +670,7 @@ public class AuthServiceTests
         
         _userRepository.Setup(x => x.GetUserByEmailAsync(forgotPasswordRequest.Email, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
-        _verificationTokenService.Setup(x => x.GenerateVerificationToken(userId, It.IsAny<CancellationToken>()))
+        _verificationTokenService.Setup(x => x.GenerateVerificationToken(userId, Purpose.PasswordReset, It.IsAny<CancellationToken>()))
             .ReturnsAsync(passwordResetToken);
         _mailFactoryService.Setup(x => x.CreatePasswordResetMail(It.Is<User>(u =>
             u.Email == forgotPasswordRequest.Email && u.UserName == userName), It.IsAny<string>()))
@@ -592,7 +679,7 @@ public class AuthServiceTests
         await _authService.ForgotPassword(forgotPasswordRequest, CancellationToken.None);
         
         _userRepository.Verify(x => x.GetUserByEmailAsync(forgotPasswordRequest.Email, It.IsAny<CancellationToken>()), Times.Once);
-        _verificationTokenService.Verify(x => x.GenerateVerificationToken(userId, It.IsAny<CancellationToken>()), Times.Once);
+        _verificationTokenService.Verify(x => x.GenerateVerificationToken(userId, Purpose.PasswordReset, It.IsAny<CancellationToken>()), Times.Once);
         _mailFactoryService.Verify(x => x.CreatePasswordResetMail(It.Is<User>(u =>
             u.Email == forgotPasswordRequest.Email && u.UserName == userName), It.IsAny<string>()), Times.Once);
         _backgroundJobClient.Verify(x => x.Create(
@@ -601,37 +688,6 @@ public class AuthServiceTests
                     job.Method.Name == nameof(IMailService.SendMail)),
                 It.IsAny<EnqueuedState>()),
             Times.Once);
-    }
-
-    [Fact]
-    public async Task ForgotPassword_WhenUserDoesNotExist_ThrowsUnauthorizedException()
-    {
-        int userId = 1;
-        string userName = "test user";
-        string userEmail = "test email";
-
-        ForgotPasswordRequestDto forgotPasswordRequest = new ForgotPasswordRequestDto
-        {
-            Email = userEmail
-        };
-        
-        _userRepository.Setup(x => x.GetUserByEmailAsync(forgotPasswordRequest.Email, It.IsAny<CancellationToken>()))
-            .ReturnsAsync((User?)null);
-        
-        Func<Task> result = () => _authService.ForgotPassword(forgotPasswordRequest, CancellationToken.None);
-        
-        await Assert.ThrowsAsync<UnauthorizedException>(result);       
-        
-        _userRepository.Verify(x => x.GetUserByEmailAsync(forgotPasswordRequest.Email, It.IsAny<CancellationToken>()), Times.Once);
-        _verificationTokenService.Verify(x => x.GenerateVerificationToken(userId, It.IsAny<CancellationToken>()), Times.Never);
-        _mailFactoryService.Verify(x => x.CreatePasswordResetMail(It.Is<User>(u =>
-            u.Email == forgotPasswordRequest.Email && u.UserName == userName), It.IsAny<string>()), Times.Never);
-        _backgroundJobClient.Verify(x => x.Create(
-                It.Is<Job>(job =>
-                    job.Type == typeof(IMailService) &&
-                    job.Method.Name == nameof(IMailService.SendMail)),
-                It.IsAny<EnqueuedState>()),
-            Times.Never);
     }
 
     [Fact]
@@ -900,7 +956,9 @@ public class AuthServiceTests
 
         _userRepository.Setup(x => x.GetUserByIdAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
-        _verificationTokenService.Setup(x => x.GenerateVerificationToken(userId, It.IsAny<CancellationToken>()))
+        _verificationTokenRepository.Setup(x => x.RevokeOldEmailVerificationTokensAsync(userId, It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+        _verificationTokenService.Setup(x => x.GenerateVerificationToken(userId, Purpose.EmailVerification, It.IsAny<CancellationToken>()))
             .ReturnsAsync(verificationToken);
         _mailFactoryService.Setup(x => x.CreateVerificationMail(It.Is<User>(u =>
                 u.Email == userEmail &&
@@ -910,7 +968,7 @@ public class AuthServiceTests
         await _authService.ResendVerificationMail(userId, CancellationToken.None);
 
         _userRepository.Verify(x => x.GetUserByIdAsync(userId, It.IsAny<CancellationToken>()), Times.Once);
-        _verificationTokenService.Verify(x => x.GenerateVerificationToken(userId, It.IsAny<CancellationToken>()), Times.Once);
+        _verificationTokenService.Verify(x => x.GenerateVerificationToken(userId, Purpose.EmailVerification, It.IsAny<CancellationToken>()), Times.Once);
         _mailFactoryService.Verify(x => x.CreateVerificationMail(It.Is<User>(u =>
                 u.Email == userEmail &&
                 u.UserName == userName), verificationToken), Times.Once);
@@ -938,7 +996,7 @@ public class AuthServiceTests
         await Assert.ThrowsAsync<NotFoundException>(result);       
         
         _userRepository.Verify(x => x.GetUserByIdAsync(userId, It.IsAny<CancellationToken>()), Times.Once);
-        _verificationTokenService.Verify(x => x.GenerateVerificationToken(userId, It.IsAny<CancellationToken>()), Times.Never);
+        _verificationTokenService.Verify(x => x.GenerateVerificationToken(userId, Purpose.EmailVerification, It.IsAny<CancellationToken>()), Times.Never);
         _mailFactoryService.Verify(x => x.CreateVerificationMail(It.Is<User>(u =>
             u.Email == userEmail &&
             u.UserName == userName), verificationToken), Times.Never);

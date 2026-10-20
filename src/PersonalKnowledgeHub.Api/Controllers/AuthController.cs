@@ -61,7 +61,7 @@ namespace PersonalKnowledgeHub.Controllers
         public async Task<IActionResult> ForgotPassword(ForgotPasswordRequestDto forgotPasswordRequest, CancellationToken cancellationToken)
         {
             await _authService.ForgotPassword(forgotPasswordRequest, cancellationToken);
-            return Ok("Password reset mail sent");
+            return Ok("If an account exists with this email, a password reset link has been sent");
         }
 
         [EndpointSummary("Change the current user's password")]

@@ -15,10 +15,12 @@ namespace PersonalKnowledgeHub.Services.Implementations
     public class AuthService : IAuthService
     {
         private readonly IUserRepository _userRepository;
+        private readonly ITokenRepository _tokenRepository;
         private readonly ITokenService _tokenService;
         private readonly IUnitOfWorkRepository _unitOfWorkRepository;
         private readonly IMailFactoryService _mailFactoryService;
         private readonly IVerificationTokenService _verificationTokenService;
+        private readonly IVerificationTokenRepository _verificationTokenRepository;
         private readonly IBackgroundJobClient _backgroundJobClient;
         private readonly ILogger<AuthService> _logger;
         private readonly IAppMetrics _metrics;
@@ -30,7 +32,7 @@ namespace PersonalKnowledgeHub.Services.Implementations
         public AuthService(IUserRepository userRepository, ITokenService tokenService, 
             IUnitOfWorkRepository unitOfWorkRepository, IMailFactoryService mailFactoryService, 
             IVerificationTokenService verificationTokenService, IBackgroundJobClient backgroundJobClient,
-            ILogger<AuthService> logger, IAppMetrics metrics)
+            ILogger<AuthService> logger, IAppMetrics metrics, IVerificationTokenRepository verificationTokenRepository, ITokenRepository tokenRepository)
         {
             _userRepository = userRepository;
             _tokenService = tokenService;
@@ -40,6 +42,8 @@ namespace PersonalKnowledgeHub.Services.Implementations
             _backgroundJobClient = backgroundJobClient;
             _logger = logger;
             _metrics = metrics;
+            _verificationTokenRepository = verificationTokenRepository;
+            _tokenRepository = tokenRepository;
         }
 
         public bool IsEmailValid(string email)
@@ -90,7 +94,7 @@ namespace PersonalKnowledgeHub.Services.Implementations
             string accessToken = await _tokenService.GenerateAccessToken(registeredUser.Id, cancellationToken);
             activity?.AddEvent(new ActivityEvent("access_token_generation_finished"));
             activity?.AddEvent(new ActivityEvent("verification_token_generation_started"));
-            string verificationToken = await _verificationTokenService.GenerateVerificationToken(registeredUser.Id, cancellationToken);
+            string verificationToken = await _verificationTokenService.GenerateVerificationToken(registeredUser.Id, Purpose.EmailVerification, cancellationToken);
             activity?.AddEvent(new ActivityEvent("verification_token_generation_finished"));
             activity?.AddEvent(new ActivityEvent("verification_mail_queued"));
             MailData verificationMail = _mailFactoryService.CreateVerificationMail(user, verificationToken);
@@ -115,6 +119,12 @@ namespace PersonalKnowledgeHub.Services.Implementations
                 throw new UnauthorizedException("User not found");
             }
             activity?.SetTag("auth.user_found", true);
+            if (loggedInUser.Status == UserStatus.Banned)
+            {
+                _logger.LogWarning("Login attempt failed because user {UserId} is banned", loggedInUser.Id);
+                _metrics.LoginFailed();
+                throw new ForbiddenException("Account is banned");
+            }
             if (loggedInUser.LockedUntil != null && loggedInUser.LockedUntil > DateTime.UtcNow)
             {
                 _logger.LogWarning("Login attempt failed because user {UserId} is locked", loggedInUser.Id);
@@ -147,6 +157,19 @@ namespace PersonalKnowledgeHub.Services.Implementations
 
         public async Task<AuthResponseDto> RefreshUser(RefreshRequestDto refreshRequest, CancellationToken cancellationToken)
         {
+            RefreshToken oldRefreshToken = await _tokenService.GetRefreshTokenWithoutTracking(refreshRequest.RefreshToken, cancellationToken);
+            User? user = await _userRepository.GetUserByIdAsync(oldRefreshToken.UserId, cancellationToken);
+
+            if (user == null)
+            {
+                throw new NotFoundException("User not found");
+            }
+
+            if (user.Status == UserStatus.Banned)
+            {
+                throw new ForbiddenException("Account is banned");
+            }
+            
             RefreshTransactionResult result = await _unitOfWorkRepository.ExecuteInTransactionAsync(
                 async transactionCancellationToken =>
             {
@@ -194,9 +217,9 @@ namespace PersonalKnowledgeHub.Services.Implementations
             User? user = await _userRepository.GetUserByEmailAsync(forgotPasswordRequest.Email, cancellationToken);
             if (user == null)
             {
-                throw new UnauthorizedException("Email is incorrect");
+                return;
             }
-            string passwordResetToken = await _verificationTokenService.GenerateVerificationToken(user.Id, cancellationToken);
+            string passwordResetToken = await _verificationTokenService.GenerateVerificationToken(user.Id, Purpose.PasswordReset, cancellationToken);
             MailData passwordResetMail = _mailFactoryService.CreatePasswordResetMail(user, passwordResetToken);
             _backgroundJobClient.Enqueue<IMailService>(mailService => mailService.SendMail(passwordResetMail));
         }
@@ -221,6 +244,7 @@ namespace PersonalKnowledgeHub.Services.Implementations
             MailData passwordChangedMail = _mailFactoryService.CreatePasswordChangedMail(user);
             _backgroundJobClient.Enqueue<IMailService>(mailService => mailService.SendMail(passwordChangedMail));
             _logger.LogInformation("User {UserId} password changed successfully", user.Id);
+            await _tokenRepository.RevokeRefreshTokensByUserAsync(user.Id, cancellationToken);
         }
 
         public async Task VerifyPendingUser(string token, int userId, CancellationToken cancellationToken)
@@ -242,7 +266,8 @@ namespace PersonalKnowledgeHub.Services.Implementations
             {
                 throw new NotFoundException("User not found");
             }
-            string verificationToken = await _verificationTokenService.GenerateVerificationToken(user.Id, cancellationToken);
+            await _verificationTokenRepository.RevokeOldEmailVerificationTokensAsync(userId, cancellationToken);
+            string verificationToken = await _verificationTokenService.GenerateVerificationToken(user.Id, Purpose.EmailVerification, cancellationToken);
             MailData verificationMail = _mailFactoryService.CreateVerificationMail(user, verificationToken);
             _backgroundJobClient.Enqueue<IMailService>(mailService => mailService.SendMail(verificationMail));
         }

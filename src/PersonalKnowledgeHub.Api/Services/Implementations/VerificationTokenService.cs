@@ -12,6 +12,7 @@ public class VerificationTokenService : IVerificationTokenService
 {
     private readonly IVerificationTokenRepository _verificationTokenRepository;
     private readonly ILogger<VerificationTokenService> _logger;
+    private IVerificationTokenService _verificationTokenServiceImplementation;
 
     public VerificationTokenService(IVerificationTokenRepository verificationTokenRepository, ILogger<VerificationTokenService> logger)
     {
@@ -19,7 +20,7 @@ public class VerificationTokenService : IVerificationTokenService
         _logger = logger;
     }
 
-    public async Task<string> GenerateVerificationToken(int userId, CancellationToken cancellationToken)
+    public async Task<string> GenerateVerificationToken(int userId, Purpose purpose, CancellationToken cancellationToken)
     {
         string rawToken = WebEncoders.Base64UrlEncode(RandomNumberGenerator.GetBytes(32));
         byte[] binaryToken = Encoding.UTF8.GetBytes(rawToken);
@@ -30,7 +31,8 @@ public class VerificationTokenService : IVerificationTokenService
             CreatedAt = DateTime.UtcNow,
             ExpiresAt = DateTime.UtcNow.AddHours(24),
             VerifiedAt = null,
-            UserId = userId
+            UserId = userId,
+            Purpose = purpose
         };
         await _verificationTokenRepository.AddVerificationTokenAsync(verificationToken, cancellationToken);
         return rawToken;
@@ -45,6 +47,10 @@ public class VerificationTokenService : IVerificationTokenService
         if (verificationToken == null)
         {
             throw new NotFoundException("Verification token not found");
+        }
+        if (verificationToken.Purpose != Purpose.EmailVerification)
+        {
+            throw new ValidationException("Invalid verification token");
         }
         if (verificationToken.ExpiresAt < DateTime.UtcNow)
         {
@@ -70,6 +76,10 @@ public class VerificationTokenService : IVerificationTokenService
         if (verificationToken == null)
         {
             throw new NotFoundException("Verification token not found");
+        }
+        if (verificationToken.Purpose != Purpose.PasswordReset)
+        {
+            throw new ValidationException("Invalid verification token");
         }
         if (verificationToken.ExpiresAt < DateTime.UtcNow)
         {

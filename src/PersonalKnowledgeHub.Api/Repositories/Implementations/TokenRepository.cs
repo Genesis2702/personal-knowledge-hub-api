@@ -19,6 +19,11 @@ namespace PersonalKnowledgeHub.Repositories.Implementations
             return await _dbContext.RefreshTokens.SingleOrDefaultAsync(rt => rt.Token == token, cancellationToken);
         }
 
+        public async Task<RefreshToken?> GetRefreshTokenWithoutTrackingAsync(string token, CancellationToken cancellationToken)
+        {
+            return await _dbContext.RefreshTokens.AsNoTracking().SingleOrDefaultAsync(rt => rt.Token == token, cancellationToken);
+        }
+
         public async Task AddRefreshTokenAsync(RefreshToken refreshToken, CancellationToken cancellationToken)
         {
             await _dbContext.RefreshTokens.AddAsync(refreshToken, cancellationToken);

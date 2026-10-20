@@ -40,6 +40,9 @@ namespace PersonalKnowledgeHub.Data
                 .HasForeignKey(verificationToken => verificationToken.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
             modelBuilder.Entity<VerificationToken>()
+                .Property(verificationToken => verificationToken.Purpose)
+                .HasConversion<string>();
+            modelBuilder.Entity<VerificationToken>()
                 .HasIndex(verificationToken => verificationToken.Token)
                 .IsUnique();
 

@@ -508,35 +508,6 @@ public class AuthEndpointTests : IntegrationTestBase
     }
 
     [Fact]
-    public async Task ForgotPassword_WhenEmailIsNotCorrect_ReturnsUnauthorized()
-    {
-        await using var scope = Fixture.Factory!.Services.CreateAsyncScope();
-        var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        var jobClient = scope.ServiceProvider.GetRequiredService<RecordingBackgroundJobClient>();
-
-        User user = new User
-        {
-            Email = "user@gmail.com",
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword("user password"),
-            Status = UserStatus.Active
-        };
-        
-        dbContext.Users.Add(user);
-        await dbContext.SaveChangesAsync();
-        
-        HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, "auth/forgot-password");
-        request.Content = JsonContent.Create(new ForgotPasswordRequest
-        {
-            Email = "wrong@gmail.com"
-        });
-        
-        HttpResponseMessage response = await Fixture.Client!.SendAsync(request);
-        
-        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
-        Assert.Empty(jobClient.Jobs);
-    }
-
-    [Fact]
     public async Task ChangePassword_WhenRequestIsValid_ReturnsOk()
     {
         await using var scope = Fixture.Factory!.Services.CreateAsyncScope();
@@ -676,7 +647,7 @@ public class AuthEndpointTests : IntegrationTestBase
         dbContext.Users.Add(user);
         await dbContext.SaveChangesAsync();
         
-        string verificationToken = await verificationTokenService.GenerateVerificationToken(user.Id, CancellationToken.None);
+        string verificationToken = await verificationTokenService.GenerateVerificationToken(user.Id, Purpose.PasswordReset, CancellationToken.None);
         
         HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, $"auth/reset-password?token={verificationToken}");
         request.Content = JsonContent.Create(new ResetPasswordRequestDto
@@ -719,7 +690,7 @@ public class AuthEndpointTests : IntegrationTestBase
         dbContext.Users.Add(user);
         await dbContext.SaveChangesAsync();
         
-        string verificationToken = await verificationTokenService.GenerateVerificationToken(user.Id, CancellationToken.None);
+        string verificationToken = await verificationTokenService.GenerateVerificationToken(user.Id, Purpose.PasswordReset, CancellationToken.None);
         
         HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, $"auth/reset-password?token={verificationToken}");
         request.Content = JsonContent.Create(new ResetPasswordRequestDto
@@ -792,7 +763,7 @@ public class AuthEndpointTests : IntegrationTestBase
         dbContext.Users.Add(user);
         await dbContext.SaveChangesAsync();
         
-        string verificationToken = await verificationTokenService.GenerateVerificationToken(user.Id, CancellationToken.None);
+        string verificationToken = await verificationTokenService.GenerateVerificationToken(user.Id, Purpose.PasswordReset, CancellationToken.None);
         
         string hashedToken = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(verificationToken)));
         VerificationToken? token = await dbContext.VerificationTokens.SingleOrDefaultAsync(t => t.Token == hashedToken);
@@ -835,7 +806,7 @@ public class AuthEndpointTests : IntegrationTestBase
         dbContext.Users.Add(user);
         await dbContext.SaveChangesAsync();
         
-        string verificationToken = await verificationTokenService.GenerateVerificationToken(user.Id, CancellationToken.None);
+        string verificationToken = await verificationTokenService.GenerateVerificationToken(user.Id, Purpose.PasswordReset, CancellationToken.None);
         
         string hashedToken = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(verificationToken)));
         VerificationToken? token = await dbContext.VerificationTokens.SingleOrDefaultAsync(t => t.Token == hashedToken);
@@ -878,7 +849,7 @@ public class AuthEndpointTests : IntegrationTestBase
         dbContext.Users.Add(user);
         await dbContext.SaveChangesAsync();
         
-        string verificationToken = await verificationTokenService.GenerateVerificationToken(user.Id, CancellationToken.None);
+        string verificationToken = await verificationTokenService.GenerateVerificationToken(user.Id, Purpose.EmailVerification, CancellationToken.None);
         string accessToken = await tokenService.GenerateAccessToken(user.Id, CancellationToken.None);
         
         HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, $"auth/mail-verification?token={verificationToken}");
@@ -950,7 +921,7 @@ public class AuthEndpointTests : IntegrationTestBase
         dbContext.Users.Add(user);
         await dbContext.SaveChangesAsync();
         
-        string verificationToken = await verificationTokenService.GenerateVerificationToken(user.Id, CancellationToken.None);
+        string verificationToken = await verificationTokenService.GenerateVerificationToken(user.Id, Purpose.EmailVerification, CancellationToken.None);
         
         string hashedToken = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(verificationToken)));
         VerificationToken? token = await dbContext.VerificationTokens.SingleOrDefaultAsync(t => t.Token == hashedToken);
@@ -1000,7 +971,7 @@ public class AuthEndpointTests : IntegrationTestBase
         dbContext.Users.Add(anotherUser);
         await dbContext.SaveChangesAsync();
         
-        string verificationToken = await verificationTokenService.GenerateVerificationToken(anotherUser.Id, CancellationToken.None);
+        string verificationToken = await verificationTokenService.GenerateVerificationToken(anotherUser.Id, Purpose.EmailVerification, CancellationToken.None);
         string accessToken = await tokenService.GenerateAccessToken(user.Id, CancellationToken.None);
         
         HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, $"auth/mail-verification?token={verificationToken}");
@@ -1040,7 +1011,7 @@ public class AuthEndpointTests : IntegrationTestBase
         dbContext.Users.Add(user);
         await dbContext.SaveChangesAsync();
         
-        string verificationToken = await verificationTokenService.GenerateVerificationToken(user.Id, CancellationToken.None);
+        string verificationToken = await verificationTokenService.GenerateVerificationToken(user.Id, Purpose.EmailVerification, CancellationToken.None);
         
         string hashedToken = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(verificationToken)));
         VerificationToken? token = await dbContext.VerificationTokens.SingleOrDefaultAsync(t => t.Token == hashedToken);
@@ -1080,7 +1051,7 @@ public class AuthEndpointTests : IntegrationTestBase
         dbContext.Users.Add(user);
         await dbContext.SaveChangesAsync();
         
-        string verificationToken = await verificationTokenService.GenerateVerificationToken(user.Id, CancellationToken.None);
+        string verificationToken = await verificationTokenService.GenerateVerificationToken(user.Id, Purpose.EmailVerification, CancellationToken.None);
         string accessToken = await tokenService.GenerateAccessToken(user.Id, CancellationToken.None);
         
         HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, $"auth/mail-verification?token={verificationToken}");

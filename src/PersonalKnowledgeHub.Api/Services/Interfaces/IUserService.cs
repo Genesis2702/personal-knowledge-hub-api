@@ -13,4 +13,5 @@ public interface IUserService
     public Task UnbanUser(int userId, CancellationToken cancellationToken);
     public Task<User> AddRoleToUser(int userId, int roleId, CancellationToken cancellationToken);
     public Task RemoveRoleFromUser(int userId, int roleId, CancellationToken cancellationToken);
+    public Task DeactivatePendingUsers(CancellationToken cancellationToken);
 }

@@ -17,6 +17,10 @@ public static class RecurringTaskService
             "verification-token-cleanup",
             verificationTokenService => verificationTokenService.CleanUpVerificationTokens(CancellationToken.None),
             Cron.Monthly);
+        recurringJobManager.AddOrUpdate<IUserService>(
+            "deactivate-pending-users",
+            userService => userService.DeactivatePendingUsers(CancellationToken.None),
+            Cron.Weekly);
         recurringJobManager.AddOrUpdate<IFileResourceService>(
             "resource-cleanup",
             fileResourceService => fileResourceService.DeleteFileResourcePermanently(CancellationToken.None),

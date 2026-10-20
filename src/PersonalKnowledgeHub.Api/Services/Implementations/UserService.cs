@@ -124,4 +124,9 @@ public class UserService : IUserService
         await _userRepository.RemoveRoleFromUserAsync(userRole, cancellationToken);
         _logger.LogInformation("Role {RoleId} removed from user {UserId} successfully", role.Id, user.Id);
     }
+
+    public async Task DeactivatePendingUsers(CancellationToken cancellationToken)
+    {
+        await _userRepository.DeactivatePendingUsersAsync(cancellationToken);
+    }
 }

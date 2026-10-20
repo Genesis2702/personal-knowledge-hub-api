@@ -19,5 +19,6 @@ namespace PersonalKnowledgeHub.Repositories.Interfaces
         public Task ChangeUserStatusAsync(User user, UserStatus status, CancellationToken cancellationToken);
         public Task<int> UpdateFailedLoginAttemptsAsync(int userId, int failedLoginLimit, int lockedMinutes, CancellationToken cancellationToken);
         public Task<int> ResetFailedLoginAttemptsAsync(int userId, CancellationToken cancellationToken);
+        public Task DeactivatePendingUsersAsync(CancellationToken cancellationToken);
     }
 }
