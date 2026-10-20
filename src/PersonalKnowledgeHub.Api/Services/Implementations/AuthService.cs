@@ -217,7 +217,7 @@ namespace PersonalKnowledgeHub.Services.Implementations
             User? user = await _userRepository.GetUserByEmailAsync(forgotPasswordRequest.Email, cancellationToken);
             if (user == null)
             {
-                throw new UnauthorizedException("Email is incorrect");
+                return;
             }
             string passwordResetToken = await _verificationTokenService.GenerateVerificationToken(user.Id, Purpose.PasswordReset, cancellationToken);
             MailData passwordResetMail = _mailFactoryService.CreatePasswordResetMail(user, passwordResetToken);

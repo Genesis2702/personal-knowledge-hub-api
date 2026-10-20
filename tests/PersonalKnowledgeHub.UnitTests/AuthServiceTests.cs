@@ -691,37 +691,6 @@ public class AuthServiceTests
     }
 
     [Fact]
-    public async Task ForgotPassword_WhenUserDoesNotExist_ThrowsUnauthorizedException()
-    {
-        int userId = 1;
-        string userName = "test user";
-        string userEmail = "test email";
-
-        ForgotPasswordRequestDto forgotPasswordRequest = new ForgotPasswordRequestDto
-        {
-            Email = userEmail
-        };
-        
-        _userRepository.Setup(x => x.GetUserByEmailAsync(forgotPasswordRequest.Email, It.IsAny<CancellationToken>()))
-            .ReturnsAsync((User?)null);
-        
-        Func<Task> result = () => _authService.ForgotPassword(forgotPasswordRequest, CancellationToken.None);
-        
-        await Assert.ThrowsAsync<UnauthorizedException>(result);       
-        
-        _userRepository.Verify(x => x.GetUserByEmailAsync(forgotPasswordRequest.Email, It.IsAny<CancellationToken>()), Times.Once);
-        _verificationTokenService.Verify(x => x.GenerateVerificationToken(userId, Purpose.PasswordReset, It.IsAny<CancellationToken>()), Times.Never);
-        _mailFactoryService.Verify(x => x.CreatePasswordResetMail(It.Is<User>(u =>
-            u.Email == forgotPasswordRequest.Email && u.UserName == userName), It.IsAny<string>()), Times.Never);
-        _backgroundJobClient.Verify(x => x.Create(
-                It.Is<Job>(job =>
-                    job.Type == typeof(IMailService) &&
-                    job.Method.Name == nameof(IMailService.SendMail)),
-                It.IsAny<EnqueuedState>()),
-            Times.Never);
-    }
-
-    [Fact]
     public async Task ResetPassword_WhenUserExists_UpdatesPassword()
     {
         int userId = 1;

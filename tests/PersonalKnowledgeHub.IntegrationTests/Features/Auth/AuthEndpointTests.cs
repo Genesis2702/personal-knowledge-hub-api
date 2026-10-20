@@ -508,35 +508,6 @@ public class AuthEndpointTests : IntegrationTestBase
     }
 
     [Fact]
-    public async Task ForgotPassword_WhenEmailIsNotCorrect_ReturnsUnauthorized()
-    {
-        await using var scope = Fixture.Factory!.Services.CreateAsyncScope();
-        var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        var jobClient = scope.ServiceProvider.GetRequiredService<RecordingBackgroundJobClient>();
-
-        User user = new User
-        {
-            Email = "user@gmail.com",
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword("user password"),
-            Status = UserStatus.Active
-        };
-        
-        dbContext.Users.Add(user);
-        await dbContext.SaveChangesAsync();
-        
-        HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, "auth/forgot-password");
-        request.Content = JsonContent.Create(new ForgotPasswordRequest
-        {
-            Email = "wrong@gmail.com"
-        });
-        
-        HttpResponseMessage response = await Fixture.Client!.SendAsync(request);
-        
-        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
-        Assert.Empty(jobClient.Jobs);
-    }
-
-    [Fact]
     public async Task ChangePassword_WhenRequestIsValid_ReturnsOk()
     {
         await using var scope = Fixture.Factory!.Services.CreateAsyncScope();
