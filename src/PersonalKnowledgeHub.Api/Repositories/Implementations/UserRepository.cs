@@ -133,5 +133,15 @@ namespace PersonalKnowledgeHub.Repositories.Implementations
                     .SetProperty(user => user.LockedUntil, (DateTime?)null)
                 , cancellationToken);
         }
+
+        public async Task DeactivatePendingUsersAsync(CancellationToken cancellationToken)
+        {
+            await _dbContext.Users
+                .Where(user => user.Status == UserStatus.Pending &&
+                               user.CreatedAt <= DateTime.UtcNow.AddDays(-7))
+                .ExecuteUpdateAsync(setters => 
+                    setters.SetProperty(user => user.Status, UserStatus.Inactive),
+                    cancellationToken);
+        }
     }
 }
