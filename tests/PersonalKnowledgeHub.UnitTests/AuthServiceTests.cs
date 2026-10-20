@@ -80,7 +80,7 @@ public class AuthServiceTests
             .ReturnsAsync(refreshToken);
         _tokenService.Setup(x => x.GenerateAccessToken(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(accessToken);
-        _verificationTokenService.Setup(x => x.GenerateVerificationToken(userId, It.IsAny<CancellationToken>()))
+        _verificationTokenService.Setup(x => x.GenerateVerificationToken(userId, Purpose.EmailVerification, It.IsAny<CancellationToken>()))
             .ReturnsAsync(verificationToken);
         _mailFactoryService.Setup(x => x.CreateVerificationMail(It.Is<User>(u =>
             u.Email == registerRequest.Email && u.UserName == registerRequest.UserName), It.IsAny<string>()))
@@ -96,7 +96,7 @@ public class AuthServiceTests
             u.UserName == registerRequest.UserName && u.Email == registerRequest.Email), It.IsAny<CancellationToken>()), Times.Once);
         _tokenService.Verify(x => x.GenerateRefreshToken(userId, It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Once);
         _tokenService.Verify(x => x.GenerateAccessToken(userId, It.IsAny<CancellationToken>()), Times.Once);
-        _verificationTokenService.Verify(x => x.GenerateVerificationToken(userId, It.IsAny<CancellationToken>()), Times.Once);
+        _verificationTokenService.Verify(x => x.GenerateVerificationToken(userId, Purpose.EmailVerification, It.IsAny<CancellationToken>()), Times.Once);
         _mailFactoryService.Verify(x => x.CreateVerificationMail(It.Is<User>(u =>
             u.Email == registerRequest.Email && u.UserName == registerRequest.UserName), It.IsAny<string>()), Times.Once);
         _backgroundJobClient.Verify(x => x.Create(
@@ -131,7 +131,7 @@ public class AuthServiceTests
             u.UserName == registerRequest.UserName && u.Email == registerRequest.Email), It.IsAny<CancellationToken>()), Times.Never);
         _tokenService.Verify(x => x.GenerateRefreshToken(userId, Guid.NewGuid(), It.IsAny<CancellationToken>()), Times.Never);
         _tokenService.Verify(x => x.GenerateAccessToken(userId, It.IsAny<CancellationToken>()), Times.Never);
-        _verificationTokenService.Verify(x => x.GenerateVerificationToken(userId, It.IsAny<CancellationToken>()), Times.Never);
+        _verificationTokenService.Verify(x => x.GenerateVerificationToken(userId, Purpose.EmailVerification, It.IsAny<CancellationToken>()), Times.Never);
         _mailFactoryService.Verify(x => x.CreateVerificationMail(It.Is<User>(u =>
             u.Email == registerRequest.Email && u.UserName == registerRequest.UserName), It.IsAny<string>()), Times.Never);
         _backgroundJobClient.Verify(x => x.Create(
@@ -169,7 +169,7 @@ public class AuthServiceTests
             u.UserName == registerRequest.UserName && u.Email == registerRequest.Email), It.IsAny<CancellationToken>()), Times.Never);
         _tokenService.Verify(x => x.GenerateRefreshToken(userId, Guid.NewGuid(), It.IsAny<CancellationToken>()), Times.Never);
         _tokenService.Verify(x => x.GenerateAccessToken(userId, It.IsAny<CancellationToken>()), Times.Never);
-        _verificationTokenService.Verify(x => x.GenerateVerificationToken(userId, It.IsAny<CancellationToken>()), Times.Never);
+        _verificationTokenService.Verify(x => x.GenerateVerificationToken(userId, Purpose.EmailVerification, It.IsAny<CancellationToken>()), Times.Never);
         _mailFactoryService.Verify(x => x.CreateVerificationMail(It.Is<User>(u =>
             u.Email == registerRequest.Email && u.UserName == registerRequest.UserName), It.IsAny<string>()), Times.Never);
         _backgroundJobClient.Verify(x => x.Create(
@@ -583,7 +583,7 @@ public class AuthServiceTests
         
         _userRepository.Setup(x => x.GetUserByEmailAsync(forgotPasswordRequest.Email, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
-        _verificationTokenService.Setup(x => x.GenerateVerificationToken(userId, It.IsAny<CancellationToken>()))
+        _verificationTokenService.Setup(x => x.GenerateVerificationToken(userId, Purpose.PasswordReset, It.IsAny<CancellationToken>()))
             .ReturnsAsync(passwordResetToken);
         _mailFactoryService.Setup(x => x.CreatePasswordResetMail(It.Is<User>(u =>
             u.Email == forgotPasswordRequest.Email && u.UserName == userName), It.IsAny<string>()))
@@ -592,7 +592,7 @@ public class AuthServiceTests
         await _authService.ForgotPassword(forgotPasswordRequest, CancellationToken.None);
         
         _userRepository.Verify(x => x.GetUserByEmailAsync(forgotPasswordRequest.Email, It.IsAny<CancellationToken>()), Times.Once);
-        _verificationTokenService.Verify(x => x.GenerateVerificationToken(userId, It.IsAny<CancellationToken>()), Times.Once);
+        _verificationTokenService.Verify(x => x.GenerateVerificationToken(userId, Purpose.PasswordReset, It.IsAny<CancellationToken>()), Times.Once);
         _mailFactoryService.Verify(x => x.CreatePasswordResetMail(It.Is<User>(u =>
             u.Email == forgotPasswordRequest.Email && u.UserName == userName), It.IsAny<string>()), Times.Once);
         _backgroundJobClient.Verify(x => x.Create(
@@ -623,7 +623,7 @@ public class AuthServiceTests
         await Assert.ThrowsAsync<UnauthorizedException>(result);       
         
         _userRepository.Verify(x => x.GetUserByEmailAsync(forgotPasswordRequest.Email, It.IsAny<CancellationToken>()), Times.Once);
-        _verificationTokenService.Verify(x => x.GenerateVerificationToken(userId, It.IsAny<CancellationToken>()), Times.Never);
+        _verificationTokenService.Verify(x => x.GenerateVerificationToken(userId, Purpose.PasswordReset, It.IsAny<CancellationToken>()), Times.Never);
         _mailFactoryService.Verify(x => x.CreatePasswordResetMail(It.Is<User>(u =>
             u.Email == forgotPasswordRequest.Email && u.UserName == userName), It.IsAny<string>()), Times.Never);
         _backgroundJobClient.Verify(x => x.Create(
@@ -900,7 +900,7 @@ public class AuthServiceTests
 
         _userRepository.Setup(x => x.GetUserByIdAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
-        _verificationTokenService.Setup(x => x.GenerateVerificationToken(userId, It.IsAny<CancellationToken>()))
+        _verificationTokenService.Setup(x => x.GenerateVerificationToken(userId, Purpose.EmailVerification, It.IsAny<CancellationToken>()))
             .ReturnsAsync(verificationToken);
         _mailFactoryService.Setup(x => x.CreateVerificationMail(It.Is<User>(u =>
                 u.Email == userEmail &&
@@ -910,7 +910,7 @@ public class AuthServiceTests
         await _authService.ResendVerificationMail(userId, CancellationToken.None);
 
         _userRepository.Verify(x => x.GetUserByIdAsync(userId, It.IsAny<CancellationToken>()), Times.Once);
-        _verificationTokenService.Verify(x => x.GenerateVerificationToken(userId, It.IsAny<CancellationToken>()), Times.Once);
+        _verificationTokenService.Verify(x => x.GenerateVerificationToken(userId, Purpose.EmailVerification, It.IsAny<CancellationToken>()), Times.Once);
         _mailFactoryService.Verify(x => x.CreateVerificationMail(It.Is<User>(u =>
                 u.Email == userEmail &&
                 u.UserName == userName), verificationToken), Times.Once);
@@ -938,7 +938,7 @@ public class AuthServiceTests
         await Assert.ThrowsAsync<NotFoundException>(result);       
         
         _userRepository.Verify(x => x.GetUserByIdAsync(userId, It.IsAny<CancellationToken>()), Times.Once);
-        _verificationTokenService.Verify(x => x.GenerateVerificationToken(userId, It.IsAny<CancellationToken>()), Times.Never);
+        _verificationTokenService.Verify(x => x.GenerateVerificationToken(userId, Purpose.EmailVerification, It.IsAny<CancellationToken>()), Times.Never);
         _mailFactoryService.Verify(x => x.CreateVerificationMail(It.Is<User>(u =>
             u.Email == userEmail &&
             u.UserName == userName), verificationToken), Times.Never);

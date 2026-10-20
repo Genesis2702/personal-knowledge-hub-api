@@ -32,7 +32,7 @@ public class VerificationTokenServiceTests
             .Callback<VerificationToken, CancellationToken>((token, _) => verificationToken = token)
             .Returns(Task.CompletedTask);
         
-        var result = await _verificationTokenService.GenerateVerificationToken(userId, CancellationToken.None);
+        var result = await _verificationTokenService.GenerateVerificationToken(userId, Purpose.EmailVerification, CancellationToken.None);
         
         string expectedToken = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(result)));      
         
@@ -55,7 +55,8 @@ public class VerificationTokenServiceTests
             Token = token,
             ExpiresAt = DateTime.UtcNow.AddDays(1),
             VerifiedAt = null,
-            UserId = userId
+            UserId = userId,
+            Purpose = Purpose.EmailVerification
         };
         
         _verificationTokenRepository.Setup(x => x.GetVerificationTokenAsync(expectedToken, It.IsAny<CancellationToken>()))
@@ -109,7 +110,8 @@ public class VerificationTokenServiceTests
             Token = token,
             ExpiresAt = DateTime.UtcNow.AddDays(-1),
             VerifiedAt = null,
-            UserId = userId
+            UserId = userId,
+            Purpose = Purpose.EmailVerification
         };
         
         _verificationTokenRepository.Setup(x => x.GetVerificationTokenAsync(expectedToken, It.IsAny<CancellationToken>()))
@@ -137,7 +139,8 @@ public class VerificationTokenServiceTests
             Token = token,
             ExpiresAt = DateTime.UtcNow.AddDays(1),
             VerifiedAt = null,
-            UserId = 20
+            UserId = 20,
+            Purpose = Purpose.EmailVerification
         };
         
         _verificationTokenRepository.Setup(x => x.GetVerificationTokenAsync(expectedToken, It.IsAny<CancellationToken>()))
@@ -165,7 +168,8 @@ public class VerificationTokenServiceTests
             Token = token,
             ExpiresAt = DateTime.UtcNow.AddDays(1),
             VerifiedAt = DateTime.UtcNow,
-            UserId = userId
+            UserId = userId,
+            Purpose = Purpose.EmailVerification
         };
         
         _verificationTokenRepository.Setup(x => x.GetVerificationTokenAsync(expectedToken, It.IsAny<CancellationToken>()))
@@ -194,6 +198,7 @@ public class VerificationTokenServiceTests
             ExpiresAt = DateTime.UtcNow.AddDays(1),
             VerifiedAt = null,
             UserId = userId,
+            Purpose = Purpose.EmailVerification
         };
         
         _verificationTokenRepository.Setup(x => x.GetVerificationTokenAsync(expectedToken, It.IsAny<CancellationToken>()))
@@ -245,6 +250,7 @@ public class VerificationTokenServiceTests
             ExpiresAt = DateTime.UtcNow.AddDays(-1),
             VerifiedAt = null,
             UserId = userId,
+            Purpose = Purpose.EmailVerification
         };
         
         _verificationTokenRepository.Setup(x => x.GetVerificationTokenAsync(expectedToken, It.IsAny<CancellationToken>()))
@@ -272,6 +278,7 @@ public class VerificationTokenServiceTests
             ExpiresAt = DateTime.UtcNow.AddDays(1),
             VerifiedAt = DateTime.UtcNow,
             UserId = userId,
+            Purpose = Purpose.EmailVerification
         };
         
         _verificationTokenRepository.Setup(x => x.GetVerificationTokenAsync(expectedToken, It.IsAny<CancellationToken>()))

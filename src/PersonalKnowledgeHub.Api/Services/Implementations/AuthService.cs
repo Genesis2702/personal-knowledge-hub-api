@@ -90,7 +90,7 @@ namespace PersonalKnowledgeHub.Services.Implementations
             string accessToken = await _tokenService.GenerateAccessToken(registeredUser.Id, cancellationToken);
             activity?.AddEvent(new ActivityEvent("access_token_generation_finished"));
             activity?.AddEvent(new ActivityEvent("verification_token_generation_started"));
-            string verificationToken = await _verificationTokenService.GenerateVerificationToken(registeredUser.Id, cancellationToken);
+            string verificationToken = await _verificationTokenService.GenerateVerificationToken(registeredUser.Id, Purpose.EmailVerification, cancellationToken);
             activity?.AddEvent(new ActivityEvent("verification_token_generation_finished"));
             activity?.AddEvent(new ActivityEvent("verification_mail_queued"));
             MailData verificationMail = _mailFactoryService.CreateVerificationMail(user, verificationToken);
@@ -196,7 +196,7 @@ namespace PersonalKnowledgeHub.Services.Implementations
             {
                 throw new UnauthorizedException("Email is incorrect");
             }
-            string passwordResetToken = await _verificationTokenService.GenerateVerificationToken(user.Id, cancellationToken);
+            string passwordResetToken = await _verificationTokenService.GenerateVerificationToken(user.Id, Purpose.PasswordReset, cancellationToken);
             MailData passwordResetMail = _mailFactoryService.CreatePasswordResetMail(user, passwordResetToken);
             _backgroundJobClient.Enqueue<IMailService>(mailService => mailService.SendMail(passwordResetMail));
         }
@@ -242,7 +242,7 @@ namespace PersonalKnowledgeHub.Services.Implementations
             {
                 throw new NotFoundException("User not found");
             }
-            string verificationToken = await _verificationTokenService.GenerateVerificationToken(user.Id, cancellationToken);
+            string verificationToken = await _verificationTokenService.GenerateVerificationToken(user.Id, Purpose.EmailVerification, cancellationToken);
             MailData verificationMail = _mailFactoryService.CreateVerificationMail(user, verificationToken);
             _backgroundJobClient.Enqueue<IMailService>(mailService => mailService.SendMail(verificationMail));
         }

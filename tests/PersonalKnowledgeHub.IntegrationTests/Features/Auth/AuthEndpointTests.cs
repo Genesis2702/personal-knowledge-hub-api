@@ -676,7 +676,7 @@ public class AuthEndpointTests : IntegrationTestBase
         dbContext.Users.Add(user);
         await dbContext.SaveChangesAsync();
         
-        string verificationToken = await verificationTokenService.GenerateVerificationToken(user.Id, CancellationToken.None);
+        string verificationToken = await verificationTokenService.GenerateVerificationToken(user.Id, Purpose.PasswordReset, CancellationToken.None);
         
         HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, $"auth/reset-password?token={verificationToken}");
         request.Content = JsonContent.Create(new ResetPasswordRequestDto
@@ -719,7 +719,7 @@ public class AuthEndpointTests : IntegrationTestBase
         dbContext.Users.Add(user);
         await dbContext.SaveChangesAsync();
         
-        string verificationToken = await verificationTokenService.GenerateVerificationToken(user.Id, CancellationToken.None);
+        string verificationToken = await verificationTokenService.GenerateVerificationToken(user.Id, Purpose.PasswordReset, CancellationToken.None);
         
         HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, $"auth/reset-password?token={verificationToken}");
         request.Content = JsonContent.Create(new ResetPasswordRequestDto
@@ -792,7 +792,7 @@ public class AuthEndpointTests : IntegrationTestBase
         dbContext.Users.Add(user);
         await dbContext.SaveChangesAsync();
         
-        string verificationToken = await verificationTokenService.GenerateVerificationToken(user.Id, CancellationToken.None);
+        string verificationToken = await verificationTokenService.GenerateVerificationToken(user.Id, Purpose.PasswordReset, CancellationToken.None);
         
         string hashedToken = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(verificationToken)));
         VerificationToken? token = await dbContext.VerificationTokens.SingleOrDefaultAsync(t => t.Token == hashedToken);
@@ -835,7 +835,7 @@ public class AuthEndpointTests : IntegrationTestBase
         dbContext.Users.Add(user);
         await dbContext.SaveChangesAsync();
         
-        string verificationToken = await verificationTokenService.GenerateVerificationToken(user.Id, CancellationToken.None);
+        string verificationToken = await verificationTokenService.GenerateVerificationToken(user.Id, Purpose.PasswordReset, CancellationToken.None);
         
         string hashedToken = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(verificationToken)));
         VerificationToken? token = await dbContext.VerificationTokens.SingleOrDefaultAsync(t => t.Token == hashedToken);
@@ -878,7 +878,7 @@ public class AuthEndpointTests : IntegrationTestBase
         dbContext.Users.Add(user);
         await dbContext.SaveChangesAsync();
         
-        string verificationToken = await verificationTokenService.GenerateVerificationToken(user.Id, CancellationToken.None);
+        string verificationToken = await verificationTokenService.GenerateVerificationToken(user.Id, Purpose.EmailVerification, CancellationToken.None);
         string accessToken = await tokenService.GenerateAccessToken(user.Id, CancellationToken.None);
         
         HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, $"auth/mail-verification?token={verificationToken}");
@@ -950,7 +950,7 @@ public class AuthEndpointTests : IntegrationTestBase
         dbContext.Users.Add(user);
         await dbContext.SaveChangesAsync();
         
-        string verificationToken = await verificationTokenService.GenerateVerificationToken(user.Id, CancellationToken.None);
+        string verificationToken = await verificationTokenService.GenerateVerificationToken(user.Id, Purpose.EmailVerification, CancellationToken.None);
         
         string hashedToken = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(verificationToken)));
         VerificationToken? token = await dbContext.VerificationTokens.SingleOrDefaultAsync(t => t.Token == hashedToken);
@@ -1000,7 +1000,7 @@ public class AuthEndpointTests : IntegrationTestBase
         dbContext.Users.Add(anotherUser);
         await dbContext.SaveChangesAsync();
         
-        string verificationToken = await verificationTokenService.GenerateVerificationToken(anotherUser.Id, CancellationToken.None);
+        string verificationToken = await verificationTokenService.GenerateVerificationToken(anotherUser.Id, Purpose.EmailVerification, CancellationToken.None);
         string accessToken = await tokenService.GenerateAccessToken(user.Id, CancellationToken.None);
         
         HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, $"auth/mail-verification?token={verificationToken}");
@@ -1040,7 +1040,7 @@ public class AuthEndpointTests : IntegrationTestBase
         dbContext.Users.Add(user);
         await dbContext.SaveChangesAsync();
         
-        string verificationToken = await verificationTokenService.GenerateVerificationToken(user.Id, CancellationToken.None);
+        string verificationToken = await verificationTokenService.GenerateVerificationToken(user.Id, Purpose.EmailVerification, CancellationToken.None);
         
         string hashedToken = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(verificationToken)));
         VerificationToken? token = await dbContext.VerificationTokens.SingleOrDefaultAsync(t => t.Token == hashedToken);
@@ -1080,7 +1080,7 @@ public class AuthEndpointTests : IntegrationTestBase
         dbContext.Users.Add(user);
         await dbContext.SaveChangesAsync();
         
-        string verificationToken = await verificationTokenService.GenerateVerificationToken(user.Id, CancellationToken.None);
+        string verificationToken = await verificationTokenService.GenerateVerificationToken(user.Id, Purpose.EmailVerification, CancellationToken.None);
         string accessToken = await tokenService.GenerateAccessToken(user.Id, CancellationToken.None);
         
         HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, $"auth/mail-verification?token={verificationToken}");

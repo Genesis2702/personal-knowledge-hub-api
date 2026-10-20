@@ -9,4 +9,11 @@ public class VerificationToken
     public DateTime? VerifiedAt { get; set; }
     public int UserId { get; set; }
     public User? User { get; set; }
+    public required Purpose Purpose { get; set; }
+}
+
+public enum Purpose
+{
+    EmailVerification,
+    PasswordReset
 }
