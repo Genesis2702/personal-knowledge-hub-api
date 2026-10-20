@@ -21,6 +21,7 @@ public class AuthServiceTests
     private readonly Mock<IUnitOfWorkRepository> _unitOfWorkRepository;
     private readonly Mock<IMailFactoryService> _mailFactoryService;
     private readonly Mock<IVerificationTokenService> _verificationTokenService;
+    private readonly Mock<IVerificationTokenRepository>  _verificationTokenRepository;
     private readonly Mock<IBackgroundJobClient> _backgroundJobClient;
     private readonly Mock<IDbContextTransaction> _transaction = new();
     private readonly Mock<IAppMetrics> _metrics;
@@ -28,6 +29,7 @@ public class AuthServiceTests
     
     public AuthServiceTests()
     {
+        _verificationTokenRepository = new Mock<IVerificationTokenRepository>();
         _userRepository = new Mock<IUserRepository>();
         _tokenService = new Mock<ITokenService>();
         _unitOfWorkRepository = new Mock<IUnitOfWorkRepository>();
@@ -38,7 +40,7 @@ public class AuthServiceTests
         _authService = new AuthService(_userRepository.Object, _tokenService.Object, _unitOfWorkRepository.Object,
             _mailFactoryService.Object,
             _verificationTokenService.Object, _backgroundJobClient.Object, NullLogger<AuthService>.Instance,
-            _metrics.Object);
+            _metrics.Object, _verificationTokenRepository.Object);
     }
 
     [Fact]
@@ -900,6 +902,8 @@ public class AuthServiceTests
 
         _userRepository.Setup(x => x.GetUserByIdAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
+        _verificationTokenRepository.Setup(x => x.RevokeOldEmailVerificationTokensAsync(userId, It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
         _verificationTokenService.Setup(x => x.GenerateVerificationToken(userId, Purpose.EmailVerification, It.IsAny<CancellationToken>()))
             .ReturnsAsync(verificationToken);
         _mailFactoryService.Setup(x => x.CreateVerificationMail(It.Is<User>(u =>

@@ -19,6 +19,7 @@ namespace PersonalKnowledgeHub.Services.Implementations
         private readonly IUnitOfWorkRepository _unitOfWorkRepository;
         private readonly IMailFactoryService _mailFactoryService;
         private readonly IVerificationTokenService _verificationTokenService;
+        private readonly IVerificationTokenRepository _verificationTokenRepository;
         private readonly IBackgroundJobClient _backgroundJobClient;
         private readonly ILogger<AuthService> _logger;
         private readonly IAppMetrics _metrics;
@@ -30,7 +31,7 @@ namespace PersonalKnowledgeHub.Services.Implementations
         public AuthService(IUserRepository userRepository, ITokenService tokenService, 
             IUnitOfWorkRepository unitOfWorkRepository, IMailFactoryService mailFactoryService, 
             IVerificationTokenService verificationTokenService, IBackgroundJobClient backgroundJobClient,
-            ILogger<AuthService> logger, IAppMetrics metrics)
+            ILogger<AuthService> logger, IAppMetrics metrics, IVerificationTokenRepository verificationTokenRepository)
         {
             _userRepository = userRepository;
             _tokenService = tokenService;
@@ -40,6 +41,7 @@ namespace PersonalKnowledgeHub.Services.Implementations
             _backgroundJobClient = backgroundJobClient;
             _logger = logger;
             _metrics = metrics;
+            _verificationTokenRepository = verificationTokenRepository;
         }
 
         public bool IsEmailValid(string email)
@@ -242,6 +244,7 @@ namespace PersonalKnowledgeHub.Services.Implementations
             {
                 throw new NotFoundException("User not found");
             }
+            await _verificationTokenRepository.RevokeOldEmailVerificationTokensAsync(userId, cancellationToken);
             string verificationToken = await _verificationTokenService.GenerateVerificationToken(user.Id, Purpose.EmailVerification, cancellationToken);
             MailData verificationMail = _mailFactoryService.CreateVerificationMail(user, verificationToken);
             _backgroundJobClient.Enqueue<IMailService>(mailService => mailService.SendMail(verificationMail));

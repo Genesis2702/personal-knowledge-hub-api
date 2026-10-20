@@ -33,6 +33,19 @@ public class VerificationTokenRepository : IVerificationTokenRepository
         await _dbContext.SaveChangesAsync(cancellationToken);
     }
 
+    public async Task RevokeOldEmailVerificationTokensAsync(int userId, CancellationToken cancellationToken)
+    {
+        await _dbContext.VerificationTokens
+            .Where(verificationToken =>
+                verificationToken.UserId == userId &&
+                verificationToken.Purpose == Purpose.EmailVerification &&
+                verificationToken.VerifiedAt == null)
+            .ExecuteUpdateAsync(setters => setters
+                .SetProperty(x => x.ExpiresAt, DateTime.UtcNow)
+                .SetProperty(x => x.VerifiedAt, DateTime.UtcNow), 
+                cancellationToken);
+    }
+
     public async Task CleanUpVerificationTokenAsync(CancellationToken cancellationToken)
     {
         DateTime expiredTime = DateTime.UtcNow.AddHours(-24);
