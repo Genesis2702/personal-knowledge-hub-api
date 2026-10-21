@@ -248,6 +248,16 @@ builder.Services.AddAuthorization(options =>
 
 builder.Services.Configure<MailSettings>(builder.Configuration.GetSection("MailSettings"));
 
+builder.Services.AddOptions<EmailLinkOptions>()
+    .BindConfiguration(EmailLinkOptions.Options)
+    .Validate(
+        options => !String.IsNullOrWhiteSpace(options.VerificationUrl),
+        $"{EmailLinkOptions.Options}:VerificationUrl is required")
+    .Validate(
+        options => !String.IsNullOrWhiteSpace(options.PasswordResetUrl),
+        $"{EmailLinkOptions.Options}:PasswordResetUrl is required")
+    .ValidateOnStart();
+
 var enableHangfireStorage = builder.Configuration.GetValue<bool?>("Features:EnableHangfireStorage") ?? true;
 if (enableHangfireStorage) 
 {

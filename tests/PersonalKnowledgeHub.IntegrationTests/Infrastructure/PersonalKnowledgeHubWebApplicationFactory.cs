@@ -46,6 +46,8 @@ public class PersonalKnowledgeHubWebApplicationFactory : WebApplicationFactory<P
         builder.UseSetting("Jwt:Audience", "TestAudience");
         builder.UseSetting("ConnectionStrings:DefaultConnection", _postgresConnectionString);
         builder.UseSetting("FileUploadOptions:MaxFileSizeInBytes", (10 * 1024 * 1024).ToString());
+        builder.UseSetting("EmailLinkOptions:VerificationUrl", "https://test.example.com/verify-email");
+        builder.UseSetting("EmailLinkOptions:PasswordResetUrl", "https://test.example.com/reset-password");
 
         if (_redisConnectionString is not null)
         {

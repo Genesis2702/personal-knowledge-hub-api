@@ -1,4 +1,6 @@
-﻿using PersonalKnowledgeHub.Entities;
+﻿using Microsoft.Extensions.Options;
+using PersonalKnowledgeHub.Configuration;
+using PersonalKnowledgeHub.Entities;
 using PersonalKnowledgeHub.Services.Implementations;
 using PersonalKnowledgeHub.Services.Interfaces;
 
@@ -10,7 +12,13 @@ public class MailFactoryServiceTests
 
     public MailFactoryServiceTests()
     {
-        _mailFactoryService = new MailFactoryService();
+        var options = Options.Create(new EmailLinkOptions
+        {
+            VerificationUrl = "https://test.example.com/verify-email",
+            PasswordResetUrl = "https://test.example.com/reset-password"
+        });
+        
+        _mailFactoryService = new MailFactoryService(options);
     }
     
     [Fact]
