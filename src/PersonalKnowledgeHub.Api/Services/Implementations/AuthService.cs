@@ -247,16 +247,27 @@ namespace PersonalKnowledgeHub.Services.Implementations
             await _tokenRepository.RevokeRefreshTokensByUserAsync(user.Id, cancellationToken);
         }
 
-        public async Task VerifyPendingUser(string token, int userId, CancellationToken cancellationToken)
+        public async Task VerifyPendingUser(string token, CancellationToken cancellationToken)
         {
-            await _verificationTokenService.ValidateVerificationToken(token, userId, cancellationToken);
-            User? user = await _userRepository.GetUserByIdAsync(userId, cancellationToken);
+            VerificationToken verificationToken =
+                await _verificationTokenService.GetVerificationTokenWithoutTracking(token, cancellationToken);
+            User? user =
+                await _userRepository.GetUserByIdAsync(verificationToken.UserId, cancellationToken);
             if (user == null)
             {
                 throw new NotFoundException("User not found");
             }
-            await _userRepository.ChangeUserStatusAsync(user, UserStatus.Active, cancellationToken);
-            _logger.LogInformation("User {UserId} verified successfully", user.Id);
+            if (user.Status != UserStatus.Pending && user.Status != UserStatus.Inactive)
+            {
+                throw new ForbiddenException("User is already verified");
+            }
+            await _unitOfWorkRepository.ExecuteInTransactionAsync(async transactionCancellationToken =>
+            {
+                await _verificationTokenService.ValidateVerificationToken(token, transactionCancellationToken);
+                await _userRepository.ChangeUserStatusAsync(user, UserStatus.Active, transactionCancellationToken);
+                _logger.LogInformation("User {UserId} verified successfully", user.Id);
+                return true;
+            }, cancellationToken);
         }
 
         public async Task ResendVerificationMail(int userId, CancellationToken cancellationToken)

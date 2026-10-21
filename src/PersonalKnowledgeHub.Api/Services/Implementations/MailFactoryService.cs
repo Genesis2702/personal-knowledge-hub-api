@@ -1,4 +1,7 @@
-﻿using PersonalKnowledgeHub.DTOs.Requests;
+﻿using Microsoft.AspNetCore.WebUtilities;
+using Microsoft.Extensions.Options;
+using PersonalKnowledgeHub.Configuration;
+using PersonalKnowledgeHub.DTOs.Requests;
 using PersonalKnowledgeHub.Entities;
 using PersonalKnowledgeHub.Services.Interfaces;
 
@@ -6,9 +9,16 @@ namespace PersonalKnowledgeHub.Services.Implementations;
 
 public class MailFactoryService : IMailFactoryService
 {
+    private readonly EmailLinkOptions _options;
+
+    public MailFactoryService(IOptions<EmailLinkOptions> options)
+    {
+        _options = options.Value;
+    }
+  
     public MailData CreateVerificationMail(User user, string verificationToken)
     {
-        string verificationLink = $"http://localhost:5165/auth/mail-verification?token={verificationToken}";
+        string verificationLink = QueryHelpers.AddQueryString(_options.VerificationUrl, "token", verificationToken);
         return new MailData
         {
             EmailToId = user.Email,
@@ -107,7 +117,7 @@ public class MailFactoryService : IMailFactoryService
 
     public MailData CreatePasswordResetMail(User user, string passwordResetToken)
     {
-        string resetPasswordLink = $"https://localhost:7037/auth/reset-password?token={passwordResetToken}";
+        string resetPasswordLink = QueryHelpers.AddQueryString(_options.PasswordResetUrl, "token", passwordResetToken);
         return new MailData
         {
             EmailToId = user.Email,

@@ -873,12 +873,37 @@ public class AuthServiceTests
             PasswordHash = userPassword,
             Status = UserStatus.Pending
         };
+        
+        VerificationToken verificationTokenInstance = new VerificationToken
+        {
+            Id = 1,
+            Token = verificationToken,
+            ExpiresAt = DateTime.UtcNow.AddDays(1),
+            VerifiedAt = null,
+            UserId = userId,
+            Purpose = Purpose.EmailVerification
+        };
 
         _verificationTokenService.Setup(x =>
-                x.ValidateVerificationToken(verificationToken, userId, It.IsAny<CancellationToken>()))
-            .Returns(Task.CompletedTask);
+                x.GetVerificationTokenWithoutTracking(verificationToken, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(verificationTokenInstance);
         _userRepository.Setup(x => x.GetUserByIdAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
+        _unitOfWorkRepository
+            .Setup(x => x.ExecuteInTransactionAsync(
+                It.IsAny<Func<CancellationToken, Task<It.IsAnyType>>>(),
+                It.IsAny<CancellationToken>()))
+            .Returns(new InvocationFunc(invocation =>
+            {
+                var operation = (Delegate)invocation.Arguments[0];
+                var cancellationToken =
+                    (CancellationToken)invocation.Arguments[1];
+
+                return operation.DynamicInvoke(cancellationToken)!;
+            }));
+        _verificationTokenService.Setup(x =>
+                x.ValidateVerificationToken(verificationToken, It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
         _userRepository.Setup(x => x.ChangeUserStatusAsync(user, UserStatus.Active, It.IsAny<CancellationToken>()))
             .Callback<User, UserStatus, CancellationToken>((u, s, __) =>
             {
@@ -886,12 +911,13 @@ public class AuthServiceTests
             })
             .Returns(Task.CompletedTask);
         
-        await _authService.VerifyPendingUser(verificationToken, userId, CancellationToken.None);
+        await _authService.VerifyPendingUser(verificationToken, CancellationToken.None);
         
         Assert.Equal(UserStatus.Active, user.Status);
         
-        _verificationTokenService.Verify(x => x.ValidateVerificationToken(verificationToken, userId, It.IsAny<CancellationToken>()), Times.Once);
+        _verificationTokenService.Verify(x => x.GetVerificationTokenWithoutTracking(verificationToken, It.IsAny<CancellationToken>()), Times.Once);
         _userRepository.Verify(x => x.GetUserByIdAsync(userId, It.IsAny<CancellationToken>()), Times.Once);
+        _verificationTokenService.Verify(x => x.ValidateVerificationToken(verificationToken, It.IsAny<CancellationToken>()), Times.Once);
         _userRepository.Verify(x => x.ChangeUserStatusAsync(user, UserStatus.Active, It.IsAny<CancellationToken>()), Times.Once);      
     }
     
@@ -913,19 +939,30 @@ public class AuthServiceTests
             Status = UserStatus.Pending
         };
         
+        VerificationToken verificationTokenInstance = new VerificationToken
+        {
+            Id = 1,
+            Token = verificationToken,
+            ExpiresAt = DateTime.UtcNow.AddDays(1),
+            VerifiedAt = null,
+            UserId = userId,
+            Purpose = Purpose.EmailVerification
+        };
+
         _verificationTokenService.Setup(x =>
-                x.ValidateVerificationToken(verificationToken, userId, It.IsAny<CancellationToken>()))
-            .Returns(Task.CompletedTask);
+                x.GetVerificationTokenWithoutTracking(verificationToken, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(verificationTokenInstance);
         _userRepository.Setup(x => x.GetUserByIdAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync((User?)null);
         
-        Func<Task> result = () => _authService.VerifyPendingUser(verificationToken, userId, CancellationToken.None);
+        Func<Task> result = () => _authService.VerifyPendingUser(verificationToken, CancellationToken.None);
         
         await Assert.ThrowsAsync<NotFoundException>(result);       
         
-        _verificationTokenService.Verify(x => x.ValidateVerificationToken(verificationToken, userId, It.IsAny<CancellationToken>()), Times.Once);
+        _verificationTokenService.Verify(x => x.GetVerificationTokenWithoutTracking(verificationToken, It.IsAny<CancellationToken>()), Times.Once);
         _userRepository.Verify(x => x.GetUserByIdAsync(userId, It.IsAny<CancellationToken>()), Times.Once);
-        _userRepository.Verify(x => x.ChangeUserStatusAsync(user, UserStatus.Active, It.IsAny<CancellationToken>()), Times.Never);      
+        _verificationTokenService.Verify(x => x.ValidateVerificationToken(verificationToken, It.IsAny<CancellationToken>()), Times.Never);
+        _userRepository.Verify(x => x.ChangeUserStatusAsync(user, UserStatus.Active, It.IsAny<CancellationToken>()), Times.Never);     
     }
     
     [Fact]

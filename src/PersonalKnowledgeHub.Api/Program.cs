@@ -240,11 +240,23 @@ builder.Services.AddAuthorization(options =>
         policy => policy.RequireClaim("status", "Inactive"));
     options.AddPolicy("PendingOrActiveAccount", 
         policy => policy.RequireClaim("status", "Pending", "Active"));
+    options.AddPolicy("PendingOrInactiveAccount",
+        policy => policy.RequireClaim("status", "Pending", "Inactive"));
     options.AddPolicy("ResourceOwnerOrAdmin", policy => policy.AddRequirements(new ResourceOwnerOrAdminRequirement()));
     options.AddPolicy("TagOwnerOrAdmin", policy => policy.AddRequirements(new TagOwnerOrAdminRequirement()));
 });
 
 builder.Services.Configure<MailSettings>(builder.Configuration.GetSection("MailSettings"));
+
+builder.Services.AddOptions<EmailLinkOptions>()
+    .BindConfiguration(EmailLinkOptions.Options)
+    .Validate(
+        options => !String.IsNullOrWhiteSpace(options.VerificationUrl),
+        $"{EmailLinkOptions.Options}:VerificationUrl is required")
+    .Validate(
+        options => !String.IsNullOrWhiteSpace(options.PasswordResetUrl),
+        $"{EmailLinkOptions.Options}:PasswordResetUrl is required")
+    .ValidateOnStart();
 
 var enableHangfireStorage = builder.Configuration.GetValue<bool?>("Features:EnableHangfireStorage") ?? true;
 if (enableHangfireStorage) 

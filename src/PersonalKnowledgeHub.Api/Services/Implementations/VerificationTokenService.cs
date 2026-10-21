@@ -38,7 +38,20 @@ public class VerificationTokenService : IVerificationTokenService
         return rawToken;
     }
 
-    public async Task ValidateVerificationToken(string rawToken, int userId, CancellationToken cancellationToken)
+    public async Task<VerificationToken> GetVerificationTokenWithoutTracking(string rawToken, CancellationToken cancellationToken)
+    {
+        byte[] binaryToken = Encoding.UTF8.GetBytes(rawToken);
+        byte[] hashedToken = SHA256.HashData(binaryToken);
+        string token = Convert.ToHexString(hashedToken);
+        VerificationToken? verificationToken = await _verificationTokenRepository.GetVerificationTokenWithoutTrackingAsync(token, cancellationToken); 
+        if (verificationToken == null)
+        {
+            throw new NotFoundException("Verification token not found");
+        }
+        return verificationToken;
+    }
+
+    public async Task ValidateVerificationToken(string rawToken, CancellationToken cancellationToken)
     {
         byte[] binaryToken = Encoding.UTF8.GetBytes(rawToken);
         byte[] hashedToken = SHA256.HashData(binaryToken);
@@ -55,10 +68,6 @@ public class VerificationTokenService : IVerificationTokenService
         if (verificationToken.ExpiresAt < DateTime.UtcNow)
         {
             throw new UnauthorizedException("Verification token expired");
-        }
-        if (verificationToken.UserId != userId)
-        {
-            throw new UnauthorizedException("Verification token belongs to another user");
         }
         if (verificationToken.VerifiedAt != null)
         {

@@ -86,17 +86,16 @@ namespace PersonalKnowledgeHub.Controllers
 
         [EndpointSummary("Verify the current user's email address")]
         [HttpPost("mail-verification")]
-        [Authorize(Policy = "PendingAccount")]
+        [AllowAnonymous]
         public async Task<IActionResult> VerifyMail([FromQuery] string token, CancellationToken cancellationToken)
         {
-            int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-            await _authService.VerifyPendingUser(token, userId, cancellationToken);
+            await _authService.VerifyPendingUser(token, cancellationToken);
             return Ok("Email verified successfully");
         }
 
         [EndpointSummary("Resend the email verification message")]
         [HttpPost("resend-verification")]
-        [Authorize(Policy = "PendingAccount")]
+        [Authorize(Policy = "PendingOrInactiveAccount")]
         public async Task<IActionResult> ResendMail(CancellationToken cancellationToken)
         {
             int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);

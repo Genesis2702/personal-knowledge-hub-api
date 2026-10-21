@@ -12,7 +12,7 @@ namespace PersonalKnowledgeHub.Services.Interfaces
         public Task LogoutUser(LogoutRequestDto logoutRequest, int userId, CancellationToken cancellationToken);
         public Task ForgotPassword(ForgotPasswordRequestDto forgotPasswordRequest, CancellationToken cancellationToken);
         public Task ResetPassword(ResetPasswordRequestDto resetPasswordRequest, int userId, CancellationToken cancellationToken);
-        public Task VerifyPendingUser(string token, int userId, CancellationToken cancellationToken);
+        public Task VerifyPendingUser(string token, CancellationToken cancellationToken);
         public Task ResendVerificationMail(int userId, CancellationToken cancellationToken);
         public Task<int> VerifyPasswordChange(string token, ResetPasswordRequestDto resetPasswordRequest, CancellationToken cancellationToken);
     }
