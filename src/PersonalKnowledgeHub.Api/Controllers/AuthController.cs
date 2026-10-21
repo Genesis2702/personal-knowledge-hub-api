@@ -95,7 +95,7 @@ namespace PersonalKnowledgeHub.Controllers
 
         [EndpointSummary("Resend the email verification message")]
         [HttpPost("resend-verification")]
-        [Authorize(Policy = "PendingAccount")]
+        [Authorize(Policy = "PendingOrInactiveAccount")]
         public async Task<IActionResult> ResendMail(CancellationToken cancellationToken)
         {
             int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);

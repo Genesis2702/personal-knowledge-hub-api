@@ -240,6 +240,8 @@ builder.Services.AddAuthorization(options =>
         policy => policy.RequireClaim("status", "Inactive"));
     options.AddPolicy("PendingOrActiveAccount", 
         policy => policy.RequireClaim("status", "Pending", "Active"));
+    options.AddPolicy("PendingOrInactiveAccount",
+        policy => policy.RequireClaim("status", "Pending", "Inactive"));
     options.AddPolicy("ResourceOwnerOrAdmin", policy => policy.AddRequirements(new ResourceOwnerOrAdminRequirement()));
     options.AddPolicy("TagOwnerOrAdmin", policy => policy.AddRequirements(new TagOwnerOrAdminRequirement()));
 });
