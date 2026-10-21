@@ -20,6 +20,12 @@ public class VerificationTokenRepository : IVerificationTokenRepository
             verificationToken.Token == token, cancellationToken);
     }
 
+    public async Task<VerificationToken?> GetVerificationTokenWithoutTrackingAsync(string token, CancellationToken cancellationToken)
+    {
+        return await _dbContext.VerificationTokens.AsNoTracking().SingleOrDefaultAsync(verificationToken =>
+            verificationToken.Token == token, cancellationToken);
+    }
+
     public async Task AddVerificationTokenAsync(VerificationToken verificationToken, CancellationToken cancellationToken)
     {
         await _dbContext.VerificationTokens.AddAsync(verificationToken, cancellationToken);

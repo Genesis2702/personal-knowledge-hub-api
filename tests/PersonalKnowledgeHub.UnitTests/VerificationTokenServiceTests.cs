@@ -69,7 +69,7 @@ public class VerificationTokenServiceTests
             })
             .Returns(Task.CompletedTask);
         
-        await _verificationTokenService.ValidateVerificationToken(token, userId, CancellationToken.None);
+        await _verificationTokenService.ValidateVerificationToken(token, CancellationToken.None);
         
         Assert.NotNull(verificationToken.VerifiedAt);
         
@@ -89,7 +89,7 @@ public class VerificationTokenServiceTests
             .ReturnsAsync((VerificationToken?)null);
 
         Func<Task> result = () =>
-            _verificationTokenService.ValidateVerificationToken(token, userId, CancellationToken.None);
+            _verificationTokenService.ValidateVerificationToken(token, CancellationToken.None);
 
         await Assert.ThrowsAsync<NotFoundException>(result);
         
@@ -118,7 +118,7 @@ public class VerificationTokenServiceTests
             .ReturnsAsync(verificationToken);
         
         Func<Task> result = () =>
-            _verificationTokenService.ValidateVerificationToken(token, userId, CancellationToken.None);
+            _verificationTokenService.ValidateVerificationToken(token, CancellationToken.None);
         
         await Assert.ThrowsAsync<UnauthorizedException>(result);
         
@@ -147,7 +147,7 @@ public class VerificationTokenServiceTests
             .ReturnsAsync(verificationToken);
         
         Func<Task> result = () =>
-            _verificationTokenService.ValidateVerificationToken(token, userId, CancellationToken.None);
+            _verificationTokenService.ValidateVerificationToken(token, CancellationToken.None);
         
         await Assert.ThrowsAsync<UnauthorizedException>(result);
         
@@ -176,7 +176,7 @@ public class VerificationTokenServiceTests
             .ReturnsAsync(verificationToken);
         
         Func<Task> result = () =>
-            _verificationTokenService.ValidateVerificationToken(token, userId, CancellationToken.None);
+            _verificationTokenService.ValidateVerificationToken(token, CancellationToken.None);
         
         await Assert.ThrowsAsync<ConflictException>(result);
         
