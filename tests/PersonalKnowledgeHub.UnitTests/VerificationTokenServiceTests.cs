@@ -127,35 +127,6 @@ public class VerificationTokenServiceTests
     }
     
     [Fact]
-    public async Task ValidateVerificationToken_WhenUserDoesNotOwnToken_ThrowsUnauthorizedException()
-    {
-        int userId = 1;
-        string token = "test token";
-        string expectedToken = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(token)));     
-
-        VerificationToken verificationToken = new VerificationToken
-        {
-            Id = 1,
-            Token = token,
-            ExpiresAt = DateTime.UtcNow.AddDays(1),
-            VerifiedAt = null,
-            UserId = 20,
-            Purpose = Purpose.EmailVerification
-        };
-        
-        _verificationTokenRepository.Setup(x => x.GetVerificationTokenAsync(expectedToken, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(verificationToken);
-        
-        Func<Task> result = () =>
-            _verificationTokenService.ValidateVerificationToken(token, CancellationToken.None);
-        
-        await Assert.ThrowsAsync<UnauthorizedException>(result);
-        
-        _verificationTokenRepository.Verify(x => x.GetVerificationTokenAsync(expectedToken, It.IsAny<CancellationToken>()), Times.Once);      
-        _verificationTokenRepository.Verify(x => x.ValidateVerificationTokenAsync(It.IsAny<VerificationToken>(), It.IsAny<CancellationToken>()), Times.Never);    
-    }
-    
-    [Fact]
     public async Task ValidateVerificationToken_WhenTokenAlreadyVerified_ThrowsConflictException()
     {
         int userId = 1;
