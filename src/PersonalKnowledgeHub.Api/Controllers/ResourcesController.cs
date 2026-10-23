@@ -96,6 +96,9 @@ namespace PersonalKnowledgeHub.Controllers
         public async Task<IActionResult> UpdateResourceById(ResourceUpdateRequestDto resourceUpdateRequest, int id, CancellationToken cancellationToken)
         {
             await _resourceService.UpdateResourceById(User, id, resourceUpdateRequest, cancellationToken);
+            int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            string cacheKey = $"resource:{userId}:{id}";
+            await _distributedCache.RemoveAsync(cacheKey, cancellationToken);
             return NoContent();
         }
 
