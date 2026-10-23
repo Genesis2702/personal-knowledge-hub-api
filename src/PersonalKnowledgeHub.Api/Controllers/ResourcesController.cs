@@ -44,7 +44,7 @@ namespace PersonalKnowledgeHub.Controllers
                     cachedResources = JsonSerializer.Serialize(resourceResponsesPageResult);
                     DistributedCacheEntryOptions cacheEntryOption = new DistributedCacheEntryOptions
                     {
-                        SlidingExpiration = TimeSpan.FromMinutes(1)
+                        AbsoluteExpirationRelativeToNow = TimeSpan.FromSeconds(60)
                     };
                     await _distributedCache.SetStringAsync(cacheKey, cachedResources, cacheEntryOption, cancellationToken);
                 }
@@ -73,7 +73,7 @@ namespace PersonalKnowledgeHub.Controllers
                 cachedResource = JsonSerializer.Serialize(resourceResponse);
                 DistributedCacheEntryOptions cacheEntryOption = new DistributedCacheEntryOptions
                 {
-                    AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(3)
+                    AbsoluteExpirationRelativeToNow = TimeSpan.FromSeconds(60)
                 };
                 await _distributedCache.SetStringAsync(cacheKey, cachedResource, cacheEntryOption, cancellationToken);
             }
