@@ -91,6 +91,10 @@ namespace PersonalKnowledgeHub.Services.Implementations
             {
                 throw new ConflictException("Title already existed");
             }
+            if (resourceRequest.ResourceType == ResourceType.File)
+            {
+                throw new ValidationException("Invalid resource type");
+            }
             Resource resource = ResourceMapper.ToResource(resourceRequest, userId);
             Resource addedResource = await _resourceRepository.AddResourceAsync(resource, cancellationToken);
             _logger.LogInformation("Resource {ResourceId} added successfully for user {UserId}", 

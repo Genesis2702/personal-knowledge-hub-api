@@ -107,6 +107,10 @@ public class FileResourceService : IFileResourceService
         {
             throw new ForbiddenException("You are not authorized to view this resource");
         }
+        if (resource.ResourceType != ResourceType.File)
+        {
+            throw new ValidationException("Invalid resource type");
+        }
         if (resource.StoredFile is null)
         {
             throw new NotFoundException("This resource does not contain a file");
