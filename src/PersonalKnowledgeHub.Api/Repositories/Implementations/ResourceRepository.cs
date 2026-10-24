@@ -27,8 +27,15 @@ namespace PersonalKnowledgeHub.Repositories.Implementations
             }
             if (!string.IsNullOrEmpty(search))
             {
-                query = query.Where(resource => EF.Functions.ILike(resource.Title, $"%{search}%")
-                || (resource.Description != null && EF.Functions.ILike(resource.Description, $"%{search}%")));
+                var escapedSearch = search
+                    .Replace("!", "!!")
+                    .Replace("%", "!%")
+                    .Replace("_", "!_");
+
+                var pattern = $"%{escapedSearch}%";
+                
+                query = query.Where(resource => EF.Functions.ILike(resource.Title, pattern, "!")
+                || (resource.Description != null && EF.Functions.ILike(resource.Description, pattern, "!")));
             }
             int resourcesCount = await query.CountAsync(cancellationToken);
             List<Resource> resources = await query
