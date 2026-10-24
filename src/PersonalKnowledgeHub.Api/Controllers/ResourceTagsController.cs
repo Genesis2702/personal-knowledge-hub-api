@@ -5,6 +5,7 @@ using PersonalKnowledgeHub.DTOs.Responses;
 using PersonalKnowledgeHub.Entities;
 using PersonalKnowledgeHub.Services.Interfaces;
 using System.Security.Claims;
+using Microsoft.Extensions.Caching.Distributed;
 using PersonalKnowledgeHub.Mapper;
 
 namespace PersonalKnowledgeHub.Controllers
@@ -15,10 +16,12 @@ namespace PersonalKnowledgeHub.Controllers
     public class ResourceTagsController : ControllerBase
     {
         private readonly IResourceTagService _resourceTagService;
+        private readonly IDistributedCache _distributedCache;
 
-        public ResourceTagsController(IResourceTagService resourceTagService)
+        public ResourceTagsController(IResourceTagService resourceTagService, IDistributedCache distributedCache)
         {
             _resourceTagService = resourceTagService;
+            _distributedCache = distributedCache;
         }
 
         [EndpointSummary("Create a new resource tag for the current user")]
@@ -27,6 +30,8 @@ namespace PersonalKnowledgeHub.Controllers
         {
             int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
             Resource resource = await _resourceTagService.AddResourceTag(resourceTagRequest.TagId, resourceId, userId, cancellationToken);
+            string cacheKey = $"resource:{userId}:{resourceId}";
+            await _distributedCache.RemoveAsync(cacheKey, cancellationToken);
             ResourceResponseDto resourceResponse = ResourceMapper.ToResourceResponseDto(resource);
             return CreatedAtAction(nameof(ResourcesController.GetResourceById), "Resources", new { id = resource.Id }, resourceResponse);
         }
@@ -37,6 +42,8 @@ namespace PersonalKnowledgeHub.Controllers
         {
             int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
             await _resourceTagService.DeleteResourceTag(tagId, resourceId, userId, cancellationToken);
+            string cacheKey = $"resource:{userId}:{resourceId}";
+            await _distributedCache.RemoveAsync(cacheKey, cancellationToken);
             return NoContent();
         }
     }
