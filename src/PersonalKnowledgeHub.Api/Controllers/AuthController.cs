@@ -4,11 +4,13 @@ using PersonalKnowledgeHub.DTOs.Requests;
 using PersonalKnowledgeHub.DTOs.Responses;
 using PersonalKnowledgeHub.Services.Interfaces;
 using System.Security.Claims;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace PersonalKnowledgeHub.Controllers
 {
     [ApiController]
     [Route("[controller]")]
+    [EnableRateLimiting("auth")]
     public class AuthController : ControllerBase
     {
         private readonly IAuthService _authService;
