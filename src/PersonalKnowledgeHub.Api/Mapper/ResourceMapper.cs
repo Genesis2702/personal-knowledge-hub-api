@@ -71,6 +71,7 @@ public class ResourceMapper
             }).ToList(),
             PageIndex = resourcesPageResult.PageIndex,
             PageSize = resourcesPageResult.PageSize,
+            ItemsCount = resourcesPageResult.ItemsCount,
             PageCount = resourcesPageResult.PageCount
         };
     }
