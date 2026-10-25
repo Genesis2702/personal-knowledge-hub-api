@@ -9,10 +9,10 @@ namespace PersonalKnowledgeHub.Repositories.Interfaces
         public Task<Resource?> GetResourceByIdForRestoreAsync(int resourceId, CancellationToken cancellationToken);
         public Task<List<Resource>> GetExpiredResourcesByBatchAsync(int batchSize, int lastResourceId, DateTime expirationDate, CancellationToken cancellationToken);
         public Task<Resource> AddResourceAsync(Resource resource, CancellationToken cancellationToken);
-        public Task<int> UpdateResourceAsync(int resourceId, long version, string? title, string? url, string? description, CancellationToken cancellationToken);
+        public Task<int> UpdateResourceAsync(int resourceId, long version, bool titleSpecified, bool urlSpecified, bool descriptionSpecified, string? title, string? url, string? description, CancellationToken cancellationToken);
         public Task DeleteResourceAsync(Resource resource, int userId, CancellationToken cancellationToken);
         public Task<Resource> RestoreResourceAsync(Resource resource, CancellationToken cancellationToken);
         public Task CleanUpResourceByIdAsync(int resourceId, CancellationToken cancellationToken);
-        public Task<bool> IsTitleExistAsync(string resourceTitle, int userId, CancellationToken cancellationToken);
+        public Task<bool> IsTitleExistAsync(string resourceTitle, int? resourceId, int userId, CancellationToken cancellationToken);
     }
 }
