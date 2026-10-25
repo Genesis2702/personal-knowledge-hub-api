@@ -87,7 +87,7 @@ namespace PersonalKnowledgeHub.Services.Implementations
 
         public async Task<Resource> AddResource(ResourceRequestDto resourceRequest, int userId, CancellationToken cancellationToken)
         {
-            if (await _resourceRepository.IsTitleExistAsync(resourceRequest.Title, userId, cancellationToken))
+            if (await _resourceRepository.IsTitleExistAsync(resourceRequest.Title, null, userId, cancellationToken))
             {
                 throw new ConflictException("Title already existed");
             }
@@ -114,7 +114,20 @@ namespace PersonalKnowledgeHub.Services.Implementations
             {
                 throw new ForbiddenException("You are not authorized to update this resource");
             }
-            int updatedRows = await _resourceRepository.UpdateResourceAsync(resourceId, resource.Version, resourceUpdateRequest.Title,
+            if (resourceUpdateRequest.TitleSpecified && string.IsNullOrWhiteSpace(resourceUpdateRequest.Title))
+            {
+                throw new ValidationException("Title cannot be empty.");
+            }
+            if (resourceUpdateRequest is { TitleSpecified: true, Title: not null })
+            {
+                if (await _resourceRepository.IsTitleExistAsync(resourceUpdateRequest.Title, resourceId, resource.UserId, cancellationToken))
+                {
+                    throw new ConflictException("Title already existed");
+                }
+            }
+            int updatedRows = await _resourceRepository.UpdateResourceAsync(resourceId, resource.Version,
+                resourceUpdateRequest.TitleSpecified, resourceUpdateRequest.UrlSpecified,
+                resourceUpdateRequest.DescriptionSpecified, resourceUpdateRequest.Title,
                 resourceUpdateRequest.Url, resourceUpdateRequest.Description, cancellationToken);
             if (updatedRows == 0)
             {

@@ -86,16 +86,16 @@ namespace PersonalKnowledgeHub.Repositories.Implementations
             return resource;
         }
 
-        public async Task<int> UpdateResourceAsync(int resourceId, long version, string? title, string? url, string? description, CancellationToken cancellationToken)
+        public async Task<int> UpdateResourceAsync(int resourceId, long version, bool titleSpecified, bool urlSpecified, bool descriptionSpecified, string? title, string? url, string? description, CancellationToken cancellationToken)
         {
             return await _dbContext.Resources
                 .Where(resource => resource.Id == resourceId && resource.Version == version)
                 .ExecuteUpdateAsync(update =>
                     update
-                        .SetProperty(resource => resource.Title, resource => title != null ? title : resource.Title)
-                        .SetProperty(resource => resource.Url, resource => url != null ? url : resource.Url)
+                        .SetProperty(resource => resource.Title, resource => titleSpecified ? title : resource.Title)
+                        .SetProperty(resource => resource.Url, resource => urlSpecified ? url : resource.Url)
                         .SetProperty(resource => resource.Description,
-                            resource => description != null ? description : resource.Description)
+                            resource => descriptionSpecified ? description : resource.Description)
                         .SetProperty(resource => resource.LastModified, resource => DateTime.UtcNow)
                         .SetProperty(resource => resource.Version, resource => resource.Version + 1)
                 , cancellationToken);
@@ -126,9 +126,18 @@ namespace PersonalKnowledgeHub.Repositories.Implementations
                 .ExecuteDeleteAsync(cancellationToken);
         }
 
-        public async Task<bool> IsTitleExistAsync(string resourceTitle, int userId, CancellationToken cancellationToken)
+        public async Task<bool> IsTitleExistAsync(string resourceTitle, int? resourceId, int userId, CancellationToken cancellationToken)
         {
-            return await _dbContext.Resources.AnyAsync(resource => resource.Title == resourceTitle && resource.UserId == userId, cancellationToken);
+            if (resourceId is null)
+            {
+                return await _dbContext.Resources.AnyAsync(resource => 
+                    resource.Title == resourceTitle && 
+                    resource.UserId == userId, cancellationToken);
+            }
+            return await _dbContext.Resources.AnyAsync(resource => 
+                resource.Title == resourceTitle && 
+                resource.UserId == userId && 
+                resource.Id != resourceId, cancellationToken);
         }
     }
 }

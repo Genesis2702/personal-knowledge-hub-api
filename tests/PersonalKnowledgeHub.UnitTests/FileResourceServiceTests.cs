@@ -44,7 +44,7 @@ public class FileResourceServiceTests
         byte[] bytes = CreatePdfBytes();
         IFormFile file = CreateFormFile(bytes, "note.pdf", "application/pdf");
 
-        _resourceRepository.Setup(x => x.IsTitleExistAsync(file.FileName, userId, It.IsAny<CancellationToken>()))
+        _resourceRepository.Setup(x => x.IsTitleExistAsync(file.FileName, null, userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(false);
         _fileStorage.Setup(x => x.SaveFile(It.IsAny<Stream>(), file.FileName, userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new FileResult
@@ -66,7 +66,7 @@ public class FileResourceServiceTests
         Assert.Equal(bytes.Length, result.StoredFile.SizeInBytes);
         Assert.Equal("application/pdf", result.StoredFile.ContentType);
         
-        _resourceRepository.Verify(x => x.IsTitleExistAsync(file.FileName, userId, It.IsAny<CancellationToken>()), Times.Once);
+        _resourceRepository.Verify(x => x.IsTitleExistAsync(file.FileName, null, userId, It.IsAny<CancellationToken>()), Times.Once);
         _fileStorage.Verify(x => x.SaveFile(It.IsAny<Stream>(), file.FileName, userId, It.IsAny<CancellationToken>()), Times.Once);
         _resourceRepository.Verify(x => x.AddResourceAsync(It.IsAny<Resource>(), It.IsAny<CancellationToken>()), Times.Once);
     }
@@ -82,7 +82,7 @@ public class FileResourceServiceTests
 
         await Assert.ThrowsAsync<FileSizeLimitExceededException>(result);
         
-        _resourceRepository.Verify(x => x.IsTitleExistAsync(It.IsAny<string>(), userId, It.IsAny<CancellationToken>()), Times.Never);
+        _resourceRepository.Verify(x => x.IsTitleExistAsync(It.IsAny<string>(), null, userId, It.IsAny<CancellationToken>()), Times.Never);
         _fileStorage.Verify(x => x.SaveFile(It.IsAny<Stream>(), It.IsAny<string>(), userId, It.IsAny<CancellationToken>()), Times.Never);
         _resourceRepository.Verify(x => x.AddResourceAsync(It.IsAny<Resource>(), It.IsAny<CancellationToken>()), Times.Never);
     }
@@ -94,14 +94,14 @@ public class FileResourceServiceTests
         byte[] bytes = CreatePdfBytes();
         IFormFile file = CreateFormFile(bytes, "note.pdf", "application/pdf");
 
-        _resourceRepository.Setup(x => x.IsTitleExistAsync(file.FileName, userId, It.IsAny<CancellationToken>()))
+        _resourceRepository.Setup(x => x.IsTitleExistAsync(file.FileName, null, userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
         
         Func<Task> result = () => _fileResourceService.CreateFileResource(file, userId, CancellationToken.None);
         
         await Assert.ThrowsAsync<ConflictException>(result);
         
-        _resourceRepository.Verify(x => x.IsTitleExistAsync(file.FileName, userId, It.IsAny<CancellationToken>()), Times.Once);
+        _resourceRepository.Verify(x => x.IsTitleExistAsync(file.FileName, null, userId, It.IsAny<CancellationToken>()), Times.Once);
         _fileStorage.Verify(x => x.SaveFile(It.IsAny<Stream>(), It.IsAny<string>(), userId, It.IsAny<CancellationToken>()), Times.Never);
         _resourceRepository.Verify(x => x.AddResourceAsync(It.IsAny<Resource>(), It.IsAny<CancellationToken>()), Times.Never);
     }

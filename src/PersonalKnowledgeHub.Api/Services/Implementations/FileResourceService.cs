@@ -34,7 +34,7 @@ public class FileResourceService : IFileResourceService
             throw new FileSizeLimitExceededException("File size limit exceeded");
         }
 
-        if (await _resourceRepository.IsTitleExistAsync(file.FileName, userId, cancellationToken))
+        if (await _resourceRepository.IsTitleExistAsync(file.FileName, null, userId, cancellationToken))
         {
             throw new ConflictException("File already existed");
         }

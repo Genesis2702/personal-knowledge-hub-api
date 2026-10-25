@@ -223,7 +223,7 @@ public class ResourceServiceTests
         };
 
         _resourceRepository
-            .Setup(x => x.IsTitleExistAsync(resourceRequest.Title, userId, It.IsAny<CancellationToken>()))
+            .Setup(x => x.IsTitleExistAsync(resourceRequest.Title, null, userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(false);
         _resourceRepository.Setup(x => x.AddResourceAsync(It.Is<Resource>(r =>
                 r.Title == resourceRequest.Title &&
@@ -244,7 +244,7 @@ public class ResourceServiceTests
         Assert.Equal(resourceRequest.Description, result.Description);
         Assert.Equal(resourceRequest.ResourceType, result.ResourceType);
         
-        _resourceRepository.Verify(x => x.IsTitleExistAsync(resourceRequest.Title, userId, It.IsAny<CancellationToken>()), Times.Once);
+        _resourceRepository.Verify(x => x.IsTitleExistAsync(resourceRequest.Title, null, userId, It.IsAny<CancellationToken>()), Times.Once);
         _resourceRepository.Verify(x => x.AddResourceAsync(It.Is<Resource>(r =>
                 r.Title == resourceRequest.Title &&
                 r.Url == resourceRequest.Url &&
@@ -266,14 +266,14 @@ public class ResourceServiceTests
         };
         
         _resourceRepository
-            .Setup(x => x.IsTitleExistAsync(resourceRequest.Title, userId, It.IsAny<CancellationToken>()))
+            .Setup(x => x.IsTitleExistAsync(resourceRequest.Title, null, userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
         
         Func<Task> result = () => _resourceService.AddResource(resourceRequest, userId, CancellationToken.None);
         
         await Assert.ThrowsAsync<ConflictException>(result);
         
-        _resourceRepository.Verify(x => x.IsTitleExistAsync(resourceRequest.Title, userId, It.IsAny<CancellationToken>()), Times.Once);
+        _resourceRepository.Verify(x => x.IsTitleExistAsync(resourceRequest.Title, null, userId, It.IsAny<CancellationToken>()), Times.Once);
         _resourceRepository.Verify(x => x.AddResourceAsync(It.IsAny<Resource>(), It.IsAny<CancellationToken>()), Times.Never);
     }
     
@@ -305,8 +305,8 @@ public class ResourceServiceTests
             .ReturnsAsync(resource);
         _authorizationService.Setup(x => x.AuthorizeAsync(user, resource, "ResourceOwnerOrAdmin"))
             .ReturnsAsync(AuthorizationResult.Success());
-        _resourceRepository.Setup(x => x.UpdateResourceAsync(resourceId, resource.Version, resourceUpdateRequest.Title, resourceUpdateRequest.Url, resourceUpdateRequest.Description, It.IsAny<CancellationToken>()))
-            .Callback<int, long, string, string, string, CancellationToken>((id, version, title, url, description, _) =>
+        _resourceRepository.Setup(x => x.UpdateResourceAsync(resourceId, resource.Version, resourceUpdateRequest.TitleSpecified, resourceUpdateRequest.UrlSpecified, resourceUpdateRequest.DescriptionSpecified, resourceUpdateRequest.Title, resourceUpdateRequest.Url, resourceUpdateRequest.Description, It.IsAny<CancellationToken>()))
+            .Callback<int, long, bool, bool, bool, string, string, string, CancellationToken>((id, version, titleSpecified, urlSpecified, descriptionSpecified, title, url, description, _) =>
             {
                 resource.Title = title;
                 resource.Url = url;
@@ -322,7 +322,7 @@ public class ResourceServiceTests
         
         _resourceRepository.Verify(x => x.GetResourceByIdAsync(resourceId, It.IsAny<CancellationToken>()), Times.Once);
         _authorizationService.Verify(x => x.AuthorizeAsync(user, resource, "ResourceOwnerOrAdmin"), Times.Once);
-        _resourceRepository.Verify(x => x.UpdateResourceAsync(resourceId, resource.Version, resourceUpdateRequest.Title, resourceUpdateRequest.Url, resourceUpdateRequest.Description, It.IsAny<CancellationToken>()), Times.Once);
+        _resourceRepository.Verify(x => x.UpdateResourceAsync(resourceId, resource.Version, resourceUpdateRequest.TitleSpecified, resourceUpdateRequest.UrlSpecified, resourceUpdateRequest.DescriptionSpecified, resourceUpdateRequest.Title, resourceUpdateRequest.Url, resourceUpdateRequest.Description, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -350,7 +350,7 @@ public class ResourceServiceTests
         
         _resourceRepository.Verify(x => x.GetResourceByIdAsync(resourceId, It.IsAny<CancellationToken>()), Times.Once);
         _authorizationService.Verify(x => x.AuthorizeAsync(user, It.IsAny<Resource>(), "ResourceOwnerOrAdmin"), Times.Never);
-        _resourceRepository.Verify(x => x.UpdateResourceAsync(It.IsAny<int>(), It.IsAny<long>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+        _resourceRepository.Verify(x => x.UpdateResourceAsync(It.IsAny<int>(), It.IsAny<long>(), It.IsAny<bool>(), It.IsAny<bool>(), It.IsAny<bool>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
         
     }
     
@@ -389,7 +389,7 @@ public class ResourceServiceTests
         
         _resourceRepository.Verify(x => x.GetResourceByIdAsync(resourceId, It.IsAny<CancellationToken>()), Times.Once);
         _authorizationService.Verify(x => x.AuthorizeAsync(user, resource, "ResourceOwnerOrAdmin"), Times.Once);
-        _resourceRepository.Verify(x => x.UpdateResourceAsync(It.IsAny<int>(), It.IsAny<long>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+        _resourceRepository.Verify(x => x.UpdateResourceAsync(It.IsAny<int>(), It.IsAny<long>(), It.IsAny<bool>(), It.IsAny<bool>(), It.IsAny<bool>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
