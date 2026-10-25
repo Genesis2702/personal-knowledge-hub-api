@@ -73,7 +73,7 @@ public class ResourceTagEndpointTests : IntegrationTestBase
         var body = await response.Content.ReadFromJsonAsync<ResourceResponseDto>(jsonOptions);
         
         Assert.NotNull(body);
-        Assert.Contains(body.Tags, tagName => tagName == tag.Name);
+        Assert.Contains(body.Tags, rt => rt.Id == tag.Id && rt.Name == tag.Name);
         
         ResourceTag? addedResourceTag = await dbContext.ResourceTags.AsNoTracking().SingleOrDefaultAsync(rt => rt.ResourceId == resource.Id && rt.TagId == tag.Id);
         
