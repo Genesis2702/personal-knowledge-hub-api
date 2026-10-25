@@ -1,6 +1,7 @@
 ﻿using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using PersonalKnowledgeHub.DTOs.Requests;
 using PersonalKnowledgeHub.DTOs.Responses;
 using PersonalKnowledgeHub.Entities;
@@ -13,6 +14,7 @@ namespace PersonalKnowledgeHub.Controllers
     [ApiController]
     [Route("[controller]")]
     [Authorize(Policy = "ActiveAccount")]
+    [EnableRateLimiting("crud")]
     public class UsersController : ControllerBase
     {
         private readonly IUserService _userService;

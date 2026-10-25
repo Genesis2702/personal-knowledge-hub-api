@@ -5,6 +5,7 @@ using PersonalKnowledgeHub.DTOs.Responses;
 using PersonalKnowledgeHub.Entities;
 using PersonalKnowledgeHub.Services.Interfaces;
 using System.Security.Claims;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Caching.Distributed;
 using PersonalKnowledgeHub.Mapper;
 
@@ -13,6 +14,7 @@ namespace PersonalKnowledgeHub.Controllers
     [ApiController]
     [Route("resources/{resourceId}/tags")]
     [Authorize(Policy = "ActiveAccount")]
+    [EnableRateLimiting("crud")]
     public class ResourceTagsController : ControllerBase
     {
         private readonly IResourceTagService _resourceTagService;

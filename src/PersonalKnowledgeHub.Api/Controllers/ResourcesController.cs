@@ -7,6 +7,7 @@ using PersonalKnowledgeHub.Entities;
 using PersonalKnowledgeHub.Services.Interfaces;
 using System.Security.Claims;
 using System.Text.Json;
+using Microsoft.AspNetCore.RateLimiting;
 using PersonalKnowledgeHub.Mapper;
 using PersonalKnowledgeHub.Models;
 
@@ -30,6 +31,7 @@ namespace PersonalKnowledgeHub.Controllers
 
         [EndpointSummary("Get the current user's resources with optional filters")]
         [HttpGet]
+        [EnableRateLimiting("expensive")]
         public async Task<ActionResult<PageResult<ResourceResponseDto>>> GetResources([FromQuery] ResourceQueryRequestDto resourceQueryRequest, CancellationToken cancellationToken)
         {
             int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
@@ -61,6 +63,7 @@ namespace PersonalKnowledgeHub.Controllers
 
         [EndpointSummary("Get one of the current user's resource by ID")]
         [HttpGet("{id}")]
+        [EnableRateLimiting("crud")]
         public async Task<ActionResult<ResourceResponseDto>> GetResourceById(int id, CancellationToken cancellationToken)
         {
             int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
@@ -83,6 +86,7 @@ namespace PersonalKnowledgeHub.Controllers
 
         [EndpointSummary("Create a new resource for the current user")]
         [HttpPost]
+        [EnableRateLimiting("crud")]
         public async Task<ActionResult<ResourceResponseDto>> AddResource(ResourceRequestDto resourceRequest, CancellationToken cancellationToken)
         {
             int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
@@ -93,6 +97,7 @@ namespace PersonalKnowledgeHub.Controllers
 
         [EndpointSummary("Update one of the current user's resource by ID")]
         [HttpPatch("{id}")]
+        [EnableRateLimiting("crud")]
         public async Task<IActionResult> UpdateResourceById(ResourceUpdateRequestDto resourceUpdateRequest, int id, CancellationToken cancellationToken)
         {
             await _resourceService.UpdateResourceById(User, id, resourceUpdateRequest, cancellationToken);
@@ -104,6 +109,7 @@ namespace PersonalKnowledgeHub.Controllers
 
         [EndpointSummary("Soft delete one of the current user's resource by ID")]
         [HttpDelete("{id}")]
+        [EnableRateLimiting("crud")]
         public async Task<IActionResult> DeleteResourceById(int id, CancellationToken cancellationToken)
         {
             int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
@@ -115,6 +121,7 @@ namespace PersonalKnowledgeHub.Controllers
 
         [EndpointSummary("Restore one of the current user's soft-deleted resource by ID")]
         [HttpPost("{id}/restore")]
+        [EnableRateLimiting("crud")]
         public async Task<ActionResult<ResourceResponseDto>> RestoreResourceById(int id, CancellationToken cancellationToken)
         {
             Resource resource = await _resourceService.RestoreResourceById(User, id, cancellationToken);
@@ -125,6 +132,7 @@ namespace PersonalKnowledgeHub.Controllers
         [EndpointSummary("Upload a file for the current user")]
         [HttpPost("files")]
         [Consumes("multipart/form-data")]
+        [EnableRateLimiting("expensive")]
         public async Task<ActionResult<ResourceResponseDto>> UploadFile([FromForm] FileUploadRequestDto fileUploadRequest,
             CancellationToken cancellationToken)
         {
@@ -137,6 +145,7 @@ namespace PersonalKnowledgeHub.Controllers
 
         [EndpointSummary("Preview one of the current user's file by resource ID")]
         [HttpGet("{id}/file")]
+        [EnableRateLimiting("expensive")]
         public async Task<IActionResult> PreviewFile(int id, CancellationToken cancellationToken)
         {
             int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
@@ -146,6 +155,7 @@ namespace PersonalKnowledgeHub.Controllers
 
         [EndpointSummary("Download one of the current user's file by resource ID")]
         [HttpGet("{id}/file/download")]
+        [EnableRateLimiting("expensive")]
         public async Task<IActionResult> DownloadFile(int id, CancellationToken cancellationToken)
         {
             int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);

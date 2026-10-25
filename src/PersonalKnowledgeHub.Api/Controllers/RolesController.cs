@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using PersonalKnowledgeHub.DTOs.Requests;
 using PersonalKnowledgeHub.DTOs.Responses;
 using PersonalKnowledgeHub.Entities;
@@ -11,6 +12,7 @@ namespace PersonalKnowledgeHub.Controllers
     [Route("[controller]")]
     [Authorize(Roles = "ADMIN")]
     [Authorize(Policy = "ActiveAccount")]
+    [EnableRateLimiting("crud")]
     public class RolesController : ControllerBase
     {
         private readonly IRoleService _roleService;

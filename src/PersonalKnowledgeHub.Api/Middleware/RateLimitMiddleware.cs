@@ -1,13 +1,18 @@
 ﻿using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using StackExchange.Redis;
 
 namespace PersonalKnowledgeHub.Middleware
 {
     public sealed class RateLimitMiddleware
     {
-        private const int RequestLimit = 10;
-        private const int WindowMilliseconds = 60_000;
+        private readonly Dictionary<string, (int, int)> _policies = new()
+        {
+            { "auth", (10, 60_000) },
+            { "crud", (100, 60_000) },
+            { "expensive", (30, 60_000) },
+        };
 
         private const string IncrementScript = """
            local count = redis.call('INCR', KEYS[1])
@@ -33,7 +38,17 @@ namespace PersonalKnowledgeHub.Middleware
 
         public async Task InvokeAsync(HttpContext context)
         {
-            string key = "ratelimit:";
+            string policyName = context.GetEndpoint()?.Metadata.GetMetadata<EnableRateLimitingAttribute>()?.PolicyName ?? "crud";
+            
+            if (!_policies.TryGetValue(policyName, out var policy))
+            {
+                throw new InvalidOperationException($"Rate limiting policy '{policyName}' is not configured");
+            }
+
+            int requestLimit = policy.Item1;
+            int ttl = policy.Item2;
+            
+            string key = $"rate-limit:{policyName}:";
 
             string identity;
 
@@ -54,8 +69,8 @@ namespace PersonalKnowledgeHub.Middleware
                     var problemDetails = new ProblemDetails
                     {
                         Status = StatusCodes.Status400BadRequest,
-                        Title = "Invalid request",
-                        Detail = "Invalid IP Address",
+                        Title = "Invalid Request",
+                        Detail = "Invalid ip address",
                         Instance = context.Request.Path
                     };
 
@@ -80,13 +95,13 @@ namespace PersonalKnowledgeHub.Middleware
             RedisResult result = await _redis.ScriptEvaluateAsync(
                 IncrementScript,
                 [ key ],
-                [ WindowMilliseconds ]);
+                [ ttl ]);
             
             RedisResult[] values = (RedisResult[])result!;
             long count = (long)values[0];
             long ttlMilliseconds = Math.Max(0, (long)values[1]);
 
-            if (count > RequestLimit)
+            if (count > requestLimit)
             {
                 context.Response.Headers.RetryAfter = Math.Max(1, (int)Math.Ceiling(ttlMilliseconds / 1000d)).ToString();
                 context.Response.StatusCode = StatusCodes.Status429TooManyRequests;

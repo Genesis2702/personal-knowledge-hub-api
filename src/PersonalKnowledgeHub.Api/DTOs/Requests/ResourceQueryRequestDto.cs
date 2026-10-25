@@ -7,7 +7,7 @@ namespace PersonalKnowledgeHub.DTOs.Requests
     {
         [Range(1, int.MaxValue)]
         public int PageIndex { get; set; } = 1;
-        [Range(1, int.MaxValue)]
+        [Range(1, 20)]
         public int PageSize { get; set; } = 10;
         public int? TagId { get; set; }
         public ResourceType? ResourceType { get; set; }
