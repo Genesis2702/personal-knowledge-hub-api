@@ -37,7 +37,7 @@ public class RateLimitingTests
 
         string accessToken = await tokenService.GenerateAccessToken(user.Id, CancellationToken.None);
 
-        for (int i = 0; i < 10; i++)
+        for (int i = 0; i < 100; i++)
         {
             using HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, "/tags");
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
