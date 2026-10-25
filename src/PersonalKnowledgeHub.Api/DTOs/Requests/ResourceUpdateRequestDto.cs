@@ -1,5 +1,6 @@
 ﻿
 
+using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
 namespace PersonalKnowledgeHub.DTOs.Requests;
@@ -14,6 +15,7 @@ public class ResourceUpdateRequestDto
     [JsonIgnore] public bool UrlSpecified { get; private set; }
     [JsonIgnore] public bool DescriptionSpecified { get; private set; }
 
+    [StringLength(200)]
     public string? Title
     {
         get => _title;
@@ -24,6 +26,7 @@ public class ResourceUpdateRequestDto
         }
     }
 
+    [StringLength(4096)]
     public string? Url
     {
         get => _url;
@@ -34,6 +37,7 @@ public class ResourceUpdateRequestDto
         }
     }
 
+    [StringLength(5000)]
     public string? Description
     {
         get => _description;
