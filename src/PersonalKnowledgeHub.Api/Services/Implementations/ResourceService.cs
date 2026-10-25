@@ -114,6 +114,14 @@ namespace PersonalKnowledgeHub.Services.Implementations
             {
                 throw new ForbiddenException("You are not authorized to update this resource");
             }
+            if (resourceUpdateRequest.Title is not null)
+            {
+                int userId = int.Parse(user.FindFirstValue(ClaimTypes.NameIdentifier)!);
+                if (await _resourceRepository.IsTitleExistAsync(resourceUpdateRequest.Title, userId, cancellationToken))
+                {
+                    throw new ConflictException("Title already existed");
+                }
+            }
             int updatedRows = await _resourceRepository.UpdateResourceAsync(resourceId, resource.Version, resourceUpdateRequest.Title,
                 resourceUpdateRequest.Url, resourceUpdateRequest.Description, cancellationToken);
             if (updatedRows == 0)
