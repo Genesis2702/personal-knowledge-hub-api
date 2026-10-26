@@ -61,7 +61,7 @@ namespace PersonalKnowledgeHub.Controllers
             }
         }
 
-        [EndpointSummary("Get the current user's soft deleted resources with optional filters")]
+        [EndpointSummary("Get the current user's soft-deleted resources with optional filters")]
         [HttpGet("deleted")]
         [EnableRateLimiting("expensive")]
         public async Task<ActionResult<PageResult<ResourceResponseDto>>> GetSoftDeletedResource(

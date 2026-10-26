@@ -6,6 +6,7 @@ namespace PersonalKnowledgeHub.Repositories.Interfaces
     {
         public Task<Tag> AddTagAsync(Tag tag, CancellationToken cancellationToken);
         public Task<List<Tag>> GetTagsAsync(int userId, CancellationToken cancellationToken);
+        public Task<List<Tag>> GetSoftDeletedTagsAsync(int userId, CancellationToken cancellationToken);
         public Task<Tag?> GetTagByIdAsync(int tagId, CancellationToken cancellationToken);
         public Task<Tag?> GetTagByIdForRestoreAsync(int tagId, CancellationToken cancellationToken);
         public Task<int> UpdateTagAsync(int tagId, long version, string tagName, CancellationToken cancellationToken);

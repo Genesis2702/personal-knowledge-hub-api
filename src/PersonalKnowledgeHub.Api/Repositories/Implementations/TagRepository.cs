@@ -26,6 +26,14 @@ namespace PersonalKnowledgeHub.Repositories.Implementations
             return await _dbContext.Tags.AsNoTracking().Where(tag => tag.UserId == userId).ToListAsync(cancellationToken);
         }
 
+        public async Task<List<Tag>> GetSoftDeletedTagsAsync(int userId, CancellationToken cancellationToken)
+        {
+            return await _dbContext.Tags.IgnoreQueryFilters(["TagSoftDeletion"])
+                .AsNoTracking()
+                .Where(tag => tag.UserId == userId && tag.IsDeleted)
+                .ToListAsync(cancellationToken);
+        }
+
         public async Task<Tag?> GetTagByIdAsync(int tagId, CancellationToken cancellationToken)
         {
             return await _dbContext.Tags.SingleOrDefaultAsync(tag => tag.Id == tagId, cancellationToken);

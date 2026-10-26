@@ -39,6 +39,11 @@ namespace PersonalKnowledgeHub.Services.Implementations
             return await _tagRepository.GetTagsAsync(userId, cancellationToken);
         }
 
+        public async Task<List<Tag>> GetSoftDeletedTags(int userId, CancellationToken cancellationToken)
+        {
+            return await _tagRepository.GetSoftDeletedTagsAsync(userId, cancellationToken);
+        }
+
         public async Task<Tag> GetTagById(int tagId, int userId, CancellationToken cancellationToken)
         {
             Tag? tag = await _tagRepository.GetTagByIdAsync(tagId, cancellationToken);
