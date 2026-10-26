@@ -5,6 +5,7 @@ namespace PersonalKnowledgeHub.Repositories.Interfaces
     public interface IResourceRepository
     {
         public Task<(List<Resource>, int)> GetResourcesAsync(int userId, int pageIndex, int pageSize, int? tagId, ResourceType? resourceType, string? search, CancellationToken cancellationToken);
+        public Task<(List<Resource>, int)> GetSoftDeletedResourcesAsync(int userId, int pageIndex, int pageSize, int? tagId, ResourceType? resourceType, string? search, CancellationToken cancellationToken);
         public Task<Resource?> GetResourceByIdAsync(int resourceId, CancellationToken cancellationToken);
         public Task<Resource?> GetResourceByIdForRestoreAsync(int resourceId, CancellationToken cancellationToken);
         public Task<List<Resource>> GetExpiredResourcesByBatchAsync(int batchSize, int lastResourceId, DateTime expirationDate, CancellationToken cancellationToken);

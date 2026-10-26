@@ -59,7 +59,7 @@ namespace PersonalKnowledgeHub.Data
                 .HasIndex(resource => new { resource.UserId, resource.Title })
                 .IsUnique()
                 .HasFilter("\"IsDeleted\" = false");
-            modelBuilder.Entity<Resource>().HasQueryFilter(resource => !resource.IsDeleted);
+            modelBuilder.Entity<Resource>().HasQueryFilter("ResourceSoftDeletion", resource => !resource.IsDeleted);
 
             modelBuilder.Entity<Tag>().HasKey(tag => tag.Id);
             modelBuilder.Entity<Tag>()
@@ -71,7 +71,7 @@ namespace PersonalKnowledgeHub.Data
                 .HasIndex(tag => new { tag.UserId, tag.Name })
                 .IsUnique()
                 .HasFilter("\"IsDeleted\" = false");
-            modelBuilder.Entity<Tag>().HasQueryFilter(tag => !tag.IsDeleted);
+            modelBuilder.Entity<Tag>().HasQueryFilter("TagSoftDeletion", tag => !tag.IsDeleted);
 
             modelBuilder.Entity<ResourceTag>().HasKey(resourceTag => new { resourceTag.ResourceId, resourceTag.TagId });
             modelBuilder.Entity<ResourceTag>()
@@ -133,7 +133,7 @@ namespace PersonalKnowledgeHub.Data
             modelBuilder.Entity<StoredFile>()
                 .HasIndex(storedFile => storedFile.StoredKey)
                 .IsUnique();
-            modelBuilder.Entity<StoredFile>().HasQueryFilter(storedFile => !storedFile.Resource!.IsDeleted);
+            modelBuilder.Entity<StoredFile>().HasQueryFilter("StoredFileSoftDeletion", storedFile => !storedFile.Resource!.IsDeleted);
         }
     }
 }
