@@ -30,7 +30,9 @@ namespace PersonalKnowledgeHub.Controllers
             List<RoleResponseDto> roleResponses = roles.Select(role => new RoleResponseDto
             {
                 Id = role.Id,
-                Name = role.Name
+                Name = role.Name,
+                Permissions = role.RolePermissions.Select(rolePermission => 
+                        new PermissionProperties(rolePermission.PermissionId, rolePermission.Permission.Name)).ToList()
             }).ToList();
             return Ok(roleResponses);
         }
@@ -43,7 +45,9 @@ namespace PersonalKnowledgeHub.Controllers
             RoleResponseDto roleResponse = new RoleResponseDto
             {
                 Id = role.Id,
-                Name = role.Name
+                Name = role.Name,
+                Permissions = role.RolePermissions.Select(rolePermission => 
+                    new PermissionProperties(rolePermission.PermissionId, rolePermission.Permission.Name)).ToList()
             };
             return Ok(roleResponse);
         }
@@ -56,7 +60,9 @@ namespace PersonalKnowledgeHub.Controllers
             RoleResponseDto roleResponse = new RoleResponseDto
             {
                 Id = role.Id,
-                Name = role.Name
+                Name = role.Name,
+                Permissions = role.RolePermissions.Select(rolePermission => 
+                    new PermissionProperties(rolePermission.PermissionId, rolePermission.Permission.Name)).ToList()
             };
             return CreatedAtAction(nameof(GetRoleById), new { id = role.Id }, roleResponse);
         }
@@ -85,7 +91,9 @@ namespace PersonalKnowledgeHub.Controllers
             RoleResponseDto roleResponse = new RoleResponseDto
             {
                 Id = role.Id,
-                Name = role.Name
+                Name = role.Name,
+                Permissions = role.RolePermissions.Select(rolePermission => 
+                    new PermissionProperties(rolePermission.PermissionId, rolePermission.Permission.Name)).ToList()
             };
             return CreatedAtAction(nameof(GetRoleById), new { id = role.Id }, roleResponse);
         }
