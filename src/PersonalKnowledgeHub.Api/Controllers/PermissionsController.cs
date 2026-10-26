@@ -10,7 +10,7 @@ namespace PersonalKnowledgeHub.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    [Authorize(Roles = "ADMIN")]
+    [Authorize(Roles = "admin")]
     [Authorize(Policy = "ActiveAccount")]
     [EnableRateLimiting("crud")]
     public class PermissionsController : ControllerBase

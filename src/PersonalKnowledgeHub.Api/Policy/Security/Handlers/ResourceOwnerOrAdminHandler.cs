@@ -15,7 +15,7 @@ public class ResourceOwnerOrAdminHandler : AuthorizationHandler<ResourceOwnerOrA
         {
             return Task.CompletedTask;
         }
-        if (context.User.IsInRole("ADMIN") || resource.UserId == userId)
+        if (context.User.IsInRole("admin") || resource.UserId == userId)
         {
             context.Succeed(requirement);
         }

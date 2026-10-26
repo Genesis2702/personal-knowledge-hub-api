@@ -64,7 +64,7 @@ public sealed class UserEndpointTests : IntegrationTestBase
 
         Role adminRole = new Role
         {
-            Name = "ADMIN",
+            Name = "admin",
             UserRoles = []
         };
         
@@ -146,7 +146,7 @@ public sealed class UserEndpointTests : IntegrationTestBase
 
         Role adminRole = new Role
         {
-            Name = "ADMIN",
+            Name = "admin",
             UserRoles = []
         };
         
@@ -266,7 +266,7 @@ public sealed class UserEndpointTests : IntegrationTestBase
 
         Role adminRole = new Role
         {
-            Name = "ADMIN",
+            Name = "admin",
             UserRoles = []
         };
         
@@ -325,7 +325,7 @@ public sealed class UserEndpointTests : IntegrationTestBase
 
         Role adminRole = new Role
         {
-            Name = "ADMIN",
+            Name = "admin",
             UserRoles = []
         };
         
@@ -379,7 +379,7 @@ public sealed class UserEndpointTests : IntegrationTestBase
 
         Role adminRole = new Role
         {
-            Name = "ADMIN",
+            Name = "admin",
             UserRoles = []
         };
         
@@ -476,7 +476,7 @@ public sealed class UserEndpointTests : IntegrationTestBase
 
         Role adminRole = new Role
         {
-            Name = "ADMIN",
+            Name = "admin",
             UserRoles = []
         };
         
@@ -673,7 +673,7 @@ public sealed class UserEndpointTests : IntegrationTestBase
 
         Role adminRole = new Role
         {
-            Name = "ADMIN"
+            Name = "admin"
         };
         
         dbContext.Roles.Add(adminRole);
@@ -782,7 +782,7 @@ public sealed class UserEndpointTests : IntegrationTestBase
 
         Role adminRole = new Role
         {
-            Name = "ADMIN"
+            Name = "admin"
         };
         
         dbContext.Roles.Add(adminRole);
@@ -835,7 +835,7 @@ public sealed class UserEndpointTests : IntegrationTestBase
         
         Role adminRole = new Role
         {
-            Name = "ADMIN"
+            Name = "admin"
         };
         
         dbContext.Roles.Add(adminRole);
@@ -893,7 +893,7 @@ public sealed class UserEndpointTests : IntegrationTestBase
 
         Role adminRole = new Role
         {
-            Name = "ADMIN"
+            Name = "admin"
         };
         
         dbContext.Roles.Add(adminRole);
@@ -998,7 +998,7 @@ public sealed class UserEndpointTests : IntegrationTestBase
 
         Role adminRole = new Role
         {
-            Name = "ADMIN"
+            Name = "admin"
         };
         
         dbContext.Roles.Add(adminRole);
@@ -1049,7 +1049,7 @@ public sealed class UserEndpointTests : IntegrationTestBase
 
         Role adminRole = new Role
         {
-            Name = "ADMIN"
+            Name = "admin"
         };
         
         dbContext.Roles.Add(adminRole);
@@ -1106,7 +1106,7 @@ public sealed class UserEndpointTests : IntegrationTestBase
 
         Role adminRole = new Role
         {
-            Name = "ADMIN"
+            Name = "admin"
         };
         
         dbContext.Roles.Add(adminRole);
@@ -1173,7 +1173,7 @@ public sealed class UserEndpointTests : IntegrationTestBase
 
         Role adminRole = new Role
         {
-            Name = "ADMIN"
+            Name = "admin"
         };
         
         dbContext.Roles.Add(adminRole);
@@ -1229,7 +1229,7 @@ public sealed class UserEndpointTests : IntegrationTestBase
 
         Role adminRole = new Role
         {
-            Name = "ADMIN"
+            Name = "admin"
         };
         
         dbContext.Roles.Add(adminRole);
@@ -1285,7 +1285,7 @@ public sealed class UserEndpointTests : IntegrationTestBase
 
         Role adminRole = new Role
         {
-            Name = "ADMIN"
+            Name = "admin"
         };
         
         dbContext.Roles.Add(adminRole);
@@ -1343,7 +1343,7 @@ public sealed class UserEndpointTests : IntegrationTestBase
 
         Role adminRole = new Role
         {
-            Name = "ADMIN"
+            Name = "admin"
         };
         
         dbContext.Roles.Add(adminRole);
@@ -1410,7 +1410,7 @@ public sealed class UserEndpointTests : IntegrationTestBase
 
         Role adminRole = new Role
         {
-            Name = "ADMIN"
+            Name = "admin"
         };
         
         dbContext.Roles.Add(adminRole);
@@ -1488,7 +1488,7 @@ public sealed class UserEndpointTests : IntegrationTestBase
 
         Role adminRole = new Role
         {
-            Name = "ADMIN"
+            Name = "admin"
         };
         
         dbContext.Roles.Add(adminRole);
@@ -1555,7 +1555,7 @@ public sealed class UserEndpointTests : IntegrationTestBase
 
         Role adminRole = new Role
         {
-            Name = "ADMIN"
+            Name = "admin"
         };
         
         dbContext.Roles.Add(adminRole);
@@ -1622,7 +1622,7 @@ public sealed class UserEndpointTests : IntegrationTestBase
 
         Role adminRole = new Role
         {
-            Name = "ADMIN"
+            Name = "admin"
         };
         
         dbContext.Roles.Add(adminRole);
@@ -1680,7 +1680,7 @@ public sealed class UserEndpointTests : IntegrationTestBase
 
         Role adminRole = new Role
         {
-            Name = "ADMIN"
+            Name = "admin"
         };
         
         dbContext.Roles.Add(adminRole);

@@ -26,7 +26,7 @@ namespace PersonalKnowledgeHub.Controllers
         
         [EndpointSummary("Get all users")]
         [HttpGet]
-        [Authorize(Roles = "ADMIN")]
+        [Authorize(Roles = "admin")]
         public async Task<ActionResult<PageResult<UserResponseDto>>> GetUsers([FromQuery] UserQueryRequestDto userQueryRequest, CancellationToken cancellationToken)
         {
             PageResult<User> usersPageResult = await _userService.GetUsers(
@@ -41,7 +41,7 @@ namespace PersonalKnowledgeHub.Controllers
 
         [EndpointSummary("Get a user by ID")]
         [HttpGet("{id}")]
-        [Authorize(Roles = "ADMIN")]
+        [Authorize(Roles = "admin")]
         public async Task<ActionResult<UserResponseDto>> GetUserById(int id, CancellationToken cancellationToken)
         {
             User user = await _userService.GetUserById(id, cancellationToken);
@@ -70,7 +70,7 @@ namespace PersonalKnowledgeHub.Controllers
 
         [EndpointSummary("Ban a user by ID")]
         [HttpPost("{id}/ban")]
-        [Authorize(Roles = "ADMIN")]
+        [Authorize(Roles = "admin")]
         public async Task<IActionResult> BanUser(int id, CancellationToken cancellationToken)
         {
             await _userService.BanUser(id, cancellationToken);
@@ -79,7 +79,7 @@ namespace PersonalKnowledgeHub.Controllers
 
         [EndpointSummary("Unban a user by ID")]
         [HttpPost("{id}/unban")]
-        [Authorize(Roles = "ADMIN")]
+        [Authorize(Roles = "admin")]
         public async Task<IActionResult> UnbanUser(int id, CancellationToken cancellationToken)
         {
             await _userService.UnbanUser(id, cancellationToken);
@@ -88,7 +88,7 @@ namespace PersonalKnowledgeHub.Controllers
 
         [EndpointSummary("Add a role to a user")]
         [HttpPost("{userId}/roles/{roleId}")]
-        [Authorize(Roles = "ADMIN")]
+        [Authorize(Roles = "admin")]
         public async Task<ActionResult<UserResponseDto>> AddRoleToUser(int userId, int roleId, CancellationToken cancellationToken)
         {
             User user = await _userService.AddRoleToUser(userId, roleId, cancellationToken);
@@ -98,7 +98,7 @@ namespace PersonalKnowledgeHub.Controllers
 
         [EndpointSummary("Remove a role from a user")]
         [HttpDelete("{userId}/roles/{roleId}")]
-        [Authorize(Roles = "ADMIN")]
+        [Authorize(Roles = "admin")]
         public async Task<IActionResult> RemoveRoleFromUser(int userId, int roleId, CancellationToken cancellationToken)
         {
             await _userService.RemoveRoleFromUser(userId, roleId, cancellationToken);
