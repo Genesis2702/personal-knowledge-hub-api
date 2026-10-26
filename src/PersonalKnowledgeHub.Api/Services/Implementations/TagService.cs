@@ -39,6 +39,11 @@ namespace PersonalKnowledgeHub.Services.Implementations
             return await _tagRepository.GetTagsAsync(userId, cancellationToken);
         }
 
+        public async Task<List<Tag>> GetSoftDeletedTags(int userId, CancellationToken cancellationToken)
+        {
+            return await _tagRepository.GetSoftDeletedTagsAsync(userId, cancellationToken);
+        }
+
         public async Task<Tag> GetTagById(int tagId, int userId, CancellationToken cancellationToken)
         {
             Tag? tag = await _tagRepository.GetTagByIdAsync(tagId, cancellationToken);
@@ -122,6 +127,10 @@ namespace PersonalKnowledgeHub.Services.Implementations
             if (!result.Succeeded)
             {
                 throw new ForbiddenException("Tag found doesn't belong to current user");
+            }
+            if (await _tagRepository.IsTagExistAsync(tag.Name, tag.UserId, cancellationToken))
+            {
+                throw new ConflictException("An active tag already uses this title, rename it before restoring this tag");
             }
             Tag restoredTag = await _tagRepository.RestoreTagAsync(tag, cancellationToken);
             _logger.LogInformation("Tag {TagId} restored successfully for user {UserId}", restoredTag.Id, user.FindFirstValue(ClaimTypes.NameIdentifier));

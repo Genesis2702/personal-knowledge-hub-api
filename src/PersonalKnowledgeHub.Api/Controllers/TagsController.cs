@@ -42,6 +42,16 @@ namespace PersonalKnowledgeHub.Controllers
             List<TagResponseDto> tagResponses = TagMapper.ToTagResponseList(tags);
             return Ok(tagResponses);
         }
+        
+        [EndpointSummary("Get the current user's soft-deleted tags")]
+        [HttpGet("deleted")]
+        public async Task<ActionResult<List<TagResponseDto>>> GetSoftDeletedTags(CancellationToken cancellationToken)
+        {
+            int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            List<Tag> tags = await _tagService.GetSoftDeletedTags(userId, cancellationToken);
+            List<TagResponseDto> tagResponses = TagMapper.ToTagResponseList(tags);
+            return Ok(tagResponses);
+        }
 
         [EndpointSummary("Get one of the current user's tag by ID")]
         [HttpGet("{id}")]

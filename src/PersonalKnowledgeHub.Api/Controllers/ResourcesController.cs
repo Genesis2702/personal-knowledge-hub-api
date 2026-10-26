@@ -61,6 +61,18 @@ namespace PersonalKnowledgeHub.Controllers
             }
         }
 
+        [EndpointSummary("Get the current user's soft-deleted resources with optional filters")]
+        [HttpGet("deleted")]
+        [EnableRateLimiting("expensive")]
+        public async Task<ActionResult<PageResult<ResourceResponseDto>>> GetSoftDeletedResource(
+            [FromQuery] ResourceQueryRequestDto resourceQueryRequest, CancellationToken cancellationToken)
+        {
+            int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            PageResult<Resource> resourcesPageResult = await _resourceService.GetSoftDeletedResources(userId, resourceQueryRequest, cancellationToken);
+            PageResult<ResourceResponseDto> resourceResponsesPageResult = ResourceMapper.ToResourceResponsesPageResult(resourcesPageResult);
+            return Ok(resourceResponsesPageResult);
+        }
+
         [EndpointSummary("Get one of the current user's resource by ID")]
         [HttpGet("{id}")]
         [EnableRateLimiting("crud")]

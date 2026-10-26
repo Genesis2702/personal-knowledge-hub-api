@@ -71,6 +71,34 @@ namespace PersonalKnowledgeHub.Services.Implementations
             return ResourceMapper.ToResourcesPageResult(resources, resourcesCount, resourceQueryRequest.PageIndex, resourceQueryRequest.PageSize);
         }
 
+        public async Task<PageResult<Resource>> GetSoftDeletedResources(int userId, ResourceQueryRequestDto resourceQueryRequest,
+            CancellationToken cancellationToken)
+        {
+            if (resourceQueryRequest.TagId.HasValue)
+            {
+                Tag? tag = await _tagRepository.GetTagByIdAsync(resourceQueryRequest.TagId.Value, cancellationToken);
+                if (tag == null)
+                {
+                    throw new NotFoundException("Tag not found");
+                }
+                if (tag.UserId != userId)
+                {
+                    throw new ForbiddenException("You are not authorized to view this resource");
+                }
+            }
+            (List<Resource> resources, int resourcesCount) = await _resourceRepository.GetSoftDeletedResourcesAsync
+                (
+                    userId, 
+                    resourceQueryRequest.PageIndex, 
+                    resourceQueryRequest.PageSize, 
+                    resourceQueryRequest.TagId, 
+                    resourceQueryRequest.ResourceType, 
+                    resourceQueryRequest.Search,
+                    cancellationToken
+                );
+            return ResourceMapper.ToResourcesPageResult(resources, resourcesCount, resourceQueryRequest.PageIndex, resourceQueryRequest.PageSize);
+        }
+
         public async Task<Resource> GetResourceById(int resourceId, int userId, CancellationToken cancellationToken)
         {
             Resource? resource = await _resourceRepository.GetResourceByIdAsync(resourceId, cancellationToken);
@@ -164,6 +192,10 @@ namespace PersonalKnowledgeHub.Services.Implementations
             if (!result.Succeeded)
             {
                 throw new ForbiddenException("You are not authorized to restore this resource");
+            }
+            if (await _resourceRepository.IsTitleExistAsync(resource.Title, resourceId, resource.UserId, cancellationToken))
+            {
+                throw new ConflictException("An active resource already uses this title, rename it before restoring this resource");
             }
             Resource restoredResource = await _resourceRepository.RestoreResourceAsync(resource, cancellationToken);
             _logger.LogInformation("Resource {ResourceId} restored successfully for user {UserId}", 

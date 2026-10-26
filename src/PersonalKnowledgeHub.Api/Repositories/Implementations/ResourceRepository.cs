@@ -49,6 +49,42 @@ namespace PersonalKnowledgeHub.Repositories.Implementations
             return (resources, resourcesCount);
         }
 
+        public async Task<(List<Resource>, int)> GetSoftDeletedResourcesAsync(int userId, int pageIndex, int pageSize, int? tagId, ResourceType? resourceType, string? search, CancellationToken cancellationToken)
+        {
+            IQueryable<Resource> query = _dbContext.Resources.IgnoreQueryFilters(["ResourceSoftDeletion", "StoredFileSoftDeletion"]).AsNoTracking()
+                .Where(resource => resource.UserId == userId && resource.IsDeleted);
+            if (tagId.HasValue)
+            {
+                query = query.Where(resource => resource.ResourceTags.Any(resourceTag => resourceTag.TagId == tagId));
+            }
+            if (resourceType.HasValue)
+            {
+                query = query.Where(resource => resource.ResourceType == resourceType);
+            }
+            if (!string.IsNullOrEmpty(search))
+            {
+                var escapedSearch = search
+                    .Replace("!", "!!")
+                    .Replace("%", "!%")
+                    .Replace("_", "!_");
+
+                var pattern = $"%{escapedSearch}%";
+                
+                query = query.Where(resource => EF.Functions.ILike(resource.Title, pattern, "!")
+                                                || (resource.Description != null && EF.Functions.ILike(resource.Description, pattern, "!")));
+            }
+            int resourcesCount = await query.CountAsync(cancellationToken);
+            List<Resource> resources = await query
+                .OrderBy(resource => resource.Id)
+                .Include(resource => resource.ResourceTags)
+                .ThenInclude(resourceTag => resourceTag.Tag)
+                .Include(resource => resource.StoredFile)
+                .Skip((pageIndex - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync(cancellationToken);
+            return (resources, resourcesCount);
+        }
+
         public async Task<Resource?> GetResourceByIdAsync(int resourceId, CancellationToken cancellationToken)
         {
             return await _dbContext.Resources
@@ -60,14 +96,17 @@ namespace PersonalKnowledgeHub.Repositories.Implementations
 
         public async Task<Resource?> GetResourceByIdForRestoreAsync(int resourceId, CancellationToken cancellationToken)
         {
-            return await _dbContext.Resources.IgnoreQueryFilters()
+            return await _dbContext.Resources.IgnoreQueryFilters(["ResourceSoftDeletion"])
+                .Include(resource => resource.ResourceTags)
+                .ThenInclude(resourceTag => resourceTag.Tag)
+                .Include(resource => resource.StoredFile)
                 .SingleOrDefaultAsync(resource => resource.Id == resourceId, cancellationToken);
         }
 
         public async Task<List<Resource>> GetExpiredResourcesByBatchAsync(int batchSize, int lastResourceId, DateTime expirationDate, CancellationToken cancellationToken)
         {
             return await _dbContext.Resources
-                .IgnoreQueryFilters()
+                .IgnoreQueryFilters(["ResourceSoftDeletion", "StoredFileSoftDeletion"])
                 .AsNoTracking()
                 .Include(resource => resource.StoredFile)
                 .Where(resource =>
@@ -121,7 +160,7 @@ namespace PersonalKnowledgeHub.Repositories.Implementations
         public async Task CleanUpResourceByIdAsync(int resourceId, CancellationToken cancellationToken)
         {
             await _dbContext.Resources
-                .IgnoreQueryFilters()
+                .IgnoreQueryFilters(["ResourceSoftDeletion"])
                 .Where(resource => resource.Id == resourceId && resource.IsDeleted)
                 .ExecuteDeleteAsync(cancellationToken);
         }

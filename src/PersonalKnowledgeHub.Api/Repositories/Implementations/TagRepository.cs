@@ -26,6 +26,14 @@ namespace PersonalKnowledgeHub.Repositories.Implementations
             return await _dbContext.Tags.AsNoTracking().Where(tag => tag.UserId == userId).ToListAsync(cancellationToken);
         }
 
+        public async Task<List<Tag>> GetSoftDeletedTagsAsync(int userId, CancellationToken cancellationToken)
+        {
+            return await _dbContext.Tags.IgnoreQueryFilters(["TagSoftDeletion"])
+                .AsNoTracking()
+                .Where(tag => tag.UserId == userId && tag.IsDeleted)
+                .ToListAsync(cancellationToken);
+        }
+
         public async Task<Tag?> GetTagByIdAsync(int tagId, CancellationToken cancellationToken)
         {
             return await _dbContext.Tags.SingleOrDefaultAsync(tag => tag.Id == tagId, cancellationToken);
@@ -33,7 +41,7 @@ namespace PersonalKnowledgeHub.Repositories.Implementations
 
         public async Task<Tag?> GetTagByIdForRestoreAsync(int tagId, CancellationToken cancellationToken)
         {
-            return await _dbContext.Tags.IgnoreQueryFilters().SingleOrDefaultAsync(tag => tag.Id == tagId, cancellationToken);
+            return await _dbContext.Tags.IgnoreQueryFilters(["TagSoftDeletion"]).SingleOrDefaultAsync(tag => tag.Id == tagId, cancellationToken);
         }
 
         public async Task<int> UpdateTagAsync(int tagId, long version, string tagName, CancellationToken cancellationToken)
@@ -66,7 +74,9 @@ namespace PersonalKnowledgeHub.Repositories.Implementations
         
         public async Task CleanUpTagsAsync(CancellationToken cancellationToken)
         {
-            await _dbContext.Tags.Where(tag => tag.IsDeleted).ExecuteDeleteAsync(cancellationToken);
+            await _dbContext.Tags.IgnoreQueryFilters(["TagSoftDeletion"])
+                .Where(tag => tag.IsDeleted)
+                .ExecuteDeleteAsync(cancellationToken);
         }
 
         public async Task<bool> IsTagExistAsync(string tagName, int userId, CancellationToken cancellationToken)
