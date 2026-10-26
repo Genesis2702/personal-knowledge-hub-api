@@ -44,7 +44,7 @@ public class UserMapper
             BannedAt = user.BannedAt,
             Resources = user.Resources.Select(resource => resource.Title).ToList(),
             Tags = user.Tags.Select(tag => tag.Name).ToList(),
-            Roles = user.UserRoles.Select(userRole => userRole.Role.Name).ToList(),
+            Roles = user.UserRoles.Select(userRole => new RoleProperties(userRole.Role.Id, userRole.Role.Name)).ToList(),
         };
     }
     
@@ -73,7 +73,7 @@ public class UserMapper
                 BannedAt = user.BannedAt,
                 Resources = user.Resources.Select(resource => resource.Title).ToList(),
                 Tags = user.Tags.Select(tag => tag.Name).ToList(),
-                Roles = user.UserRoles.Select(userRole => userRole.Role.Name).ToList(),
+                Roles = user.UserRoles.Select(userRole => new RoleProperties(userRole.Role.Id, userRole.Role.Name)).ToList(),
             }).ToList(),
             PageIndex = usersPageResult.PageIndex,
             PageSize = usersPageResult.PageSize,
