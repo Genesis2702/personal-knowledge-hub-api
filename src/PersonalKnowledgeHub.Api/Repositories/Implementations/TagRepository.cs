@@ -66,7 +66,9 @@ namespace PersonalKnowledgeHub.Repositories.Implementations
         
         public async Task CleanUpTagsAsync(CancellationToken cancellationToken)
         {
-            await _dbContext.Tags.Where(tag => tag.IsDeleted).ExecuteDeleteAsync(cancellationToken);
+            await _dbContext.Tags.IgnoreQueryFilters(["TagSoftDeletion"])
+                .Where(tag => tag.IsDeleted)
+                .ExecuteDeleteAsync(cancellationToken);
         }
 
         public async Task<bool> IsTagExistAsync(string tagName, int userId, CancellationToken cancellationToken)
