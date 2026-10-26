@@ -29,6 +29,7 @@ namespace PersonalKnowledgeHub.Controllers
             List<Role> roles = await _roleService.GetRoles(cancellationToken);
             List<RoleResponseDto> roleResponses = roles.Select(role => new RoleResponseDto
             {
+                Id = role.Id,
                 Name = role.Name
             }).ToList();
             return Ok(roleResponses);
@@ -41,6 +42,7 @@ namespace PersonalKnowledgeHub.Controllers
             Role role = await _roleService.GetRoleById(id, cancellationToken);
             RoleResponseDto roleResponse = new RoleResponseDto
             {
+                Id = role.Id,
                 Name = role.Name
             };
             return Ok(roleResponse);
@@ -53,6 +55,7 @@ namespace PersonalKnowledgeHub.Controllers
             Role role = await _roleService.AddRole(roleRequest.Name, cancellationToken);
             RoleResponseDto roleResponse = new RoleResponseDto
             {
+                Id = role.Id,
                 Name = role.Name
             };
             return CreatedAtAction(nameof(GetRoleById), new { id = role.Id }, roleResponse);
@@ -81,6 +84,7 @@ namespace PersonalKnowledgeHub.Controllers
             Role role = await _roleService.AddPermissionToRole(roleId, permissionId, cancellationToken);
             RoleResponseDto roleResponse = new RoleResponseDto
             {
+                Id = role.Id,
                 Name = role.Name
             };
             return CreatedAtAction(nameof(GetRoleById), new { id = role.Id }, roleResponse);

@@ -36,6 +36,7 @@ public class UserMapper
     {
         return new UserResponseDto
         {
+            Id = user.Id,
             UserName = user.UserName ?? user.Email,
             Email = user.Email,
             CreatedAt = user.CreatedAt,
@@ -64,6 +65,7 @@ public class UserMapper
         {
             Items = usersPageResult.Items.Select(user => new UserResponseDto
             {
+                Id = user.Id,
                 UserName = user.UserName ?? user.Email,
                 Email = user.Email,
                 CreatedAt = user.CreatedAt,

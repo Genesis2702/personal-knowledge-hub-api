@@ -29,6 +29,7 @@ namespace PersonalKnowledgeHub.Controllers
             List<Permission> permissions = await _permissionService.GetPermissions(cancellationToken);
             List<PermissionResponseDto> permissionResponses = permissions.Select(permission => new PermissionResponseDto
             {
+                Id = permission.Id,
                 Name = permission.Name
             }).ToList();
             return Ok(permissionResponses);
@@ -41,6 +42,7 @@ namespace PersonalKnowledgeHub.Controllers
             Permission permission = await _permissionService.GetPermissionById(id, cancellationToken);
             PermissionResponseDto permissionResponse = new PermissionResponseDto
             {
+                Id = permission.Id,
                 Name = permission.Name
             };
             return Ok(permissionResponse);
@@ -53,6 +55,7 @@ namespace PersonalKnowledgeHub.Controllers
             Permission permission = await _permissionService.AddPermission(permissionRequest.Name, cancellationToken);
             PermissionResponseDto permissionResponse = new PermissionResponseDto
             {
+                Id = permission.Id,
                 Name = permission.Name
             };
             return CreatedAtAction(nameof(GetPermissionById), new { id = permission.Id }, permissionResponse);
