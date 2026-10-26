@@ -31,7 +31,7 @@ public class StoredFileRepository : IStoredFileRepository
 
     public async Task<StoredFile?> GetStoredFileByStoredKeyForCleanupAsync(string storedKey, CancellationToken cancellationToken)
     {
-        return await _dbContext.StoredFiles.IgnoreQueryFilters().AsNoTracking().SingleOrDefaultAsync(f => f.StoredKey == storedKey, cancellationToken);
+        return await _dbContext.StoredFiles.IgnoreQueryFilters(["StoredFileSoftDeletion"]).AsNoTracking().SingleOrDefaultAsync(f => f.StoredKey == storedKey, cancellationToken);
     }
 
     public async Task<StoredFile> AddStoredFileAsync(StoredFile storedFile, CancellationToken cancellationToken)
