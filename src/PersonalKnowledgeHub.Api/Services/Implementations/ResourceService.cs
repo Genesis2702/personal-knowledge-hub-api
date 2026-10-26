@@ -193,6 +193,10 @@ namespace PersonalKnowledgeHub.Services.Implementations
             {
                 throw new ForbiddenException("You are not authorized to restore this resource");
             }
+            if (await _resourceRepository.IsTitleExistAsync(resource.Title, resourceId, resource.UserId, cancellationToken))
+            {
+                throw new ConflictException("An active resource already uses this title, rename it before restoring this resource");
+            }
             Resource restoredResource = await _resourceRepository.RestoreResourceAsync(resource, cancellationToken);
             _logger.LogInformation("Resource {ResourceId} restored successfully for user {UserId}", 
                 restoredResource.Id, user.FindFirstValue(ClaimTypes.NameIdentifier));

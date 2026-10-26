@@ -123,6 +123,10 @@ namespace PersonalKnowledgeHub.Services.Implementations
             {
                 throw new ForbiddenException("Tag found doesn't belong to current user");
             }
+            if (await _tagRepository.IsTagExistAsync(tag.Name, tag.UserId, cancellationToken))
+            {
+                throw new ConflictException("An active tag already uses this title, rename it before restoring this tag");
+            }
             Tag restoredTag = await _tagRepository.RestoreTagAsync(tag, cancellationToken);
             _logger.LogInformation("Tag {TagId} restored successfully for user {UserId}", restoredTag.Id, user.FindFirstValue(ClaimTypes.NameIdentifier));
             return restoredTag;
