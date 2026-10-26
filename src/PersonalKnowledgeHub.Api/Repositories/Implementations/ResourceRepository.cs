@@ -97,6 +97,9 @@ namespace PersonalKnowledgeHub.Repositories.Implementations
         public async Task<Resource?> GetResourceByIdForRestoreAsync(int resourceId, CancellationToken cancellationToken)
         {
             return await _dbContext.Resources.IgnoreQueryFilters(["ResourceSoftDeletion"])
+                .Include(resource => resource.ResourceTags)
+                .ThenInclude(resourceTag => resourceTag.Tag)
+                .Include(resource => resource.StoredFile)
                 .SingleOrDefaultAsync(resource => resource.Id == resourceId, cancellationToken);
         }
 
