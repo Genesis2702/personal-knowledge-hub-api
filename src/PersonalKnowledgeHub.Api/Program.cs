@@ -425,6 +425,8 @@ builder.Services.AddProblemDetails();
 
 var app = builder.Build();
 
+await AdminBootstrapper.RunAsync(app.Services, app.Configuration);
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
