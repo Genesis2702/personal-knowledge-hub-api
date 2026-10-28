@@ -36,7 +36,7 @@ public class RoleService : IRoleService
 
     public async Task<Role> AddRole(string name, CancellationToken cancellationToken)
     {
-        string normalizedName = name.Trim().ToLower();
+        string normalizedName = name.Trim().ToLowerInvariant();
         if (await _roleRepository.IsRoleExistAsync(normalizedName, cancellationToken))
         {
             throw new ConflictException("Role already existed");
@@ -57,7 +57,11 @@ public class RoleService : IRoleService
         {
             throw new NotFoundException("Role not found");
         }
-        string normalizedName = newName.Trim().ToLower();
+        if (role.Name == "admin")
+        {
+            throw new ConflictException("Admin role cannot be updated");
+        }
+        string normalizedName = newName.Trim().ToLowerInvariant();
         if (await _roleRepository.IsRoleExistAsync(normalizedName, cancellationToken))
         {
             throw new ConflictException("Role already existed");
