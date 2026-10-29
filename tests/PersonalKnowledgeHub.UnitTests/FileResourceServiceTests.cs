@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Moq;
+using PersonalKnowledgeHub.DTOs.Requests;
 using PersonalKnowledgeHub.Entities;
 using PersonalKnowledgeHub.Exceptions;
 using PersonalKnowledgeHub.Models;
@@ -43,8 +44,15 @@ public class FileResourceServiceTests
         int userId = 42;
         byte[] bytes = CreatePdfBytes();
         IFormFile file = CreateFormFile(bytes, "note.pdf", "application/pdf");
+        string resourceName = "note";
 
-        _resourceRepository.Setup(x => x.IsTitleExistAsync(file.FileName, null, userId, It.IsAny<CancellationToken>()))
+        FileUploadRequestDto fileUploadRequest = new FileUploadRequestDto
+        {
+            FormFile = file,
+            ResourceName = resourceName
+        };
+
+        _resourceRepository.Setup(x => x.IsTitleExistAsync(fileUploadRequest.ResourceName, null, userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(false);
         _fileStorage.Setup(x => x.SaveFile(It.IsAny<Stream>(), file.FileName, userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new FileResult
@@ -57,16 +65,17 @@ public class FileResourceServiceTests
         _resourceRepository.Setup(x => x.AddResourceAsync(It.IsAny<Resource>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((Resource resource, CancellationToken _) => resource);
 
-        Resource result = await _fileResourceService.CreateFileResource(file, userId, CancellationToken.None);
+        Resource result = await _fileResourceService.CreateFileResource(fileUploadRequest, userId, CancellationToken.None);
         
-        Assert.Equal("note.pdf", result.Title);
+        Assert.Equal("note", result.Title);
         Assert.Equal(ResourceType.File, result.ResourceType);
         Assert.Equal(userId, result.UserId);
         Assert.NotNull(result.StoredFile);
+        Assert.Equal(file.FileName, result.StoredFile.FileName);
         Assert.Equal(bytes.Length, result.StoredFile.SizeInBytes);
         Assert.Equal("application/pdf", result.StoredFile.ContentType);
         
-        _resourceRepository.Verify(x => x.IsTitleExistAsync(file.FileName, null, userId, It.IsAny<CancellationToken>()), Times.Once);
+        _resourceRepository.Verify(x => x.IsTitleExistAsync(fileUploadRequest.ResourceName, null, userId, It.IsAny<CancellationToken>()), Times.Once);
         _fileStorage.Verify(x => x.SaveFile(It.IsAny<Stream>(), file.FileName, userId, It.IsAny<CancellationToken>()), Times.Once);
         _resourceRepository.Verify(x => x.AddResourceAsync(It.IsAny<Resource>(), It.IsAny<CancellationToken>()), Times.Once);
     }
@@ -77,8 +86,15 @@ public class FileResourceServiceTests
         int userId = 42;
         var file = new Mock<IFormFile>();
         file.SetupGet(x => x.Length).Returns(_options.MaxFileSizeInBytes + 1);
+        string? resourceName = null;
 
-        Func<Task> result = () => _fileResourceService.CreateFileResource(file.Object, userId, CancellationToken.None);
+        FileUploadRequestDto fileUploadRequest = new FileUploadRequestDto
+        {
+            FormFile = file.Object,
+            ResourceName = resourceName
+        };
+
+        Func<Task> result = () => _fileResourceService.CreateFileResource(fileUploadRequest, userId, CancellationToken.None);
 
         await Assert.ThrowsAsync<FileSizeLimitExceededException>(result);
         
@@ -93,15 +109,22 @@ public class FileResourceServiceTests
         int userId = 42;
         byte[] bytes = CreatePdfBytes();
         IFormFile file = CreateFormFile(bytes, "note.pdf", "application/pdf");
+        string resourceName = "note";
 
-        _resourceRepository.Setup(x => x.IsTitleExistAsync(file.FileName, null, userId, It.IsAny<CancellationToken>()))
+        FileUploadRequestDto fileUploadRequest = new FileUploadRequestDto
+        {
+            FormFile = file,
+            ResourceName = resourceName
+        };
+
+        _resourceRepository.Setup(x => x.IsTitleExistAsync(fileUploadRequest.ResourceName, null, userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
         
-        Func<Task> result = () => _fileResourceService.CreateFileResource(file, userId, CancellationToken.None);
+        Func<Task> result = () => _fileResourceService.CreateFileResource(fileUploadRequest, userId, CancellationToken.None);
         
         await Assert.ThrowsAsync<ConflictException>(result);
         
-        _resourceRepository.Verify(x => x.IsTitleExistAsync(file.FileName, null, userId, It.IsAny<CancellationToken>()), Times.Once);
+        _resourceRepository.Verify(x => x.IsTitleExistAsync(fileUploadRequest.ResourceName, null, userId, It.IsAny<CancellationToken>()), Times.Once);
         _fileStorage.Verify(x => x.SaveFile(It.IsAny<Stream>(), It.IsAny<string>(), userId, It.IsAny<CancellationToken>()), Times.Never);
         _resourceRepository.Verify(x => x.AddResourceAsync(It.IsAny<Resource>(), It.IsAny<CancellationToken>()), Times.Never);
     }

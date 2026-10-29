@@ -150,7 +150,7 @@ namespace PersonalKnowledgeHub.Controllers
         {
             int userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
             Resource resource =
-                await _fileResourceService.CreateFileResource(fileUploadRequest.FormFile, userId, cancellationToken);
+                await _fileResourceService.CreateFileResource(fileUploadRequest, userId, cancellationToken);
             ResourceResponseDto resourceResponse = ResourceMapper.ToResourceResponseDto(resource);
             return CreatedAtAction(nameof(GetResourceById), new { id = resource.Id }, resourceResponse);
         }

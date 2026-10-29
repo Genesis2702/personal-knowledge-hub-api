@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Options;
+using PersonalKnowledgeHub.DTOs.Requests;
 using PersonalKnowledgeHub.Entities;
 using PersonalKnowledgeHub.Exceptions;
 using PersonalKnowledgeHub.Models;
@@ -27,14 +28,23 @@ public class FileResourceService : IFileResourceService
         _logger = logger;
     }
     
-    public async Task<Resource> CreateFileResource(IFormFile file, int userId, CancellationToken cancellationToken)
+    public async Task<Resource> CreateFileResource(FileUploadRequestDto fileUploadRequest, int userId, CancellationToken cancellationToken)
     {
+        IFormFile file = fileUploadRequest.FormFile;
+        string resourceName;
+
+        if (String.IsNullOrWhiteSpace(fileUploadRequest.ResourceName))
+        {
+            resourceName = file.FileName;
+        }
+        else resourceName = fileUploadRequest.ResourceName;
+        
         if (file.Length > _options.MaxFileSizeInBytes)
         {
             throw new FileSizeLimitExceededException("File size limit exceeded");
         }
 
-        if (await _resourceRepository.IsTitleExistAsync(file.FileName, null, userId, cancellationToken))
+        if (await _resourceRepository.IsTitleExistAsync(resourceName, null, userId, cancellationToken))
         {
             throw new ConflictException("File already existed");
         }
@@ -50,7 +60,7 @@ public class FileResourceService : IFileResourceService
 
             Resource resource = new Resource
             {
-                Title = file.FileName,
+                Title = resourceName,
                 Url = null,
                 Description = null,
                 ResourceType = ResourceType.File,
