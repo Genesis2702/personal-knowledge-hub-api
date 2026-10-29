@@ -1365,6 +1365,16 @@ public class ResourceEndpointTests : IntegrationTestBase
         
         byte[] actualBytes = await previewResponse.Content.ReadAsByteArrayAsync();
         Assert.Equal(expectedBytes, actualBytes);
+        
+        using var rangeRequest = new HttpRequestMessage(HttpMethod.Get, $"/resources/{resource.Id}/file");
+        rangeRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+        rangeRequest.Headers.Range = new RangeHeaderValue(0, 3);
+
+        using var rangeResponse = await Fixture.Client!.SendAsync(rangeRequest);
+
+        Assert.Equal(HttpStatusCode.PartialContent, rangeResponse.StatusCode);
+        Assert.Equal($"bytes 0-3/{expectedBytes.Length}", rangeResponse.Content.Headers.ContentRange?.ToString());
+        Assert.Equal(expectedBytes[..4], await rangeResponse.Content.ReadAsByteArrayAsync());
     }
 
     [Fact]

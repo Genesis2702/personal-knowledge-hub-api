@@ -115,13 +115,13 @@ namespace PersonalKnowledgeHub.Services.Implementations
 
         public async Task<Resource> AddResource(ResourceRequestDto resourceRequest, int userId, CancellationToken cancellationToken)
         {
-            if (await _resourceRepository.IsTitleExistAsync(resourceRequest.Title, null, userId, cancellationToken))
-            {
-                throw new ConflictException("Title already existed");
-            }
             if (resourceRequest.ResourceType == ResourceType.File)
             {
                 throw new ValidationException("Invalid resource type");
+            }
+            if (await _resourceRepository.IsTitleExistAsync(resourceRequest.Title, null, userId, cancellationToken))
+            {
+                throw new ConflictException("Title already existed");
             }
             Resource resource = ResourceMapper.ToResource(resourceRequest, userId);
             Resource addedResource = await _resourceRepository.AddResourceAsync(resource, cancellationToken);
