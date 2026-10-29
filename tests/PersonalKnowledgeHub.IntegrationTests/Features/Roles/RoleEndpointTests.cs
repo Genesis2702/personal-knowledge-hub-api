@@ -36,7 +36,7 @@ public class RoleEndpointTests : IntegrationTestBase
 
         Role adminRole = new Role
         {
-            Name = "ADMIN"
+            Name = "admin"
         };
         
         dbContext.Roles.Add(adminRole);
@@ -44,7 +44,7 @@ public class RoleEndpointTests : IntegrationTestBase
 
         Role userRole = new Role
         {
-            Name = "USER"
+            Name = "user"
         };
         
         dbContext.Roles.Add(userRole);
@@ -73,8 +73,8 @@ public class RoleEndpointTests : IntegrationTestBase
         var body = await response.Content.ReadFromJsonAsync<List<RoleResponseDto>>();
         
         Assert.NotNull(body);
-        Assert.Contains(body, role => role.Name == "ADMIN");
-        Assert.Contains(body, role => role.Name == "USER");
+        Assert.Contains(body, role => role.Name == "admin");
+        Assert.Contains(body, role => role.Name == "user");
     }
 
     [Fact]
@@ -96,7 +96,7 @@ public class RoleEndpointTests : IntegrationTestBase
 
         Role adminRole = new Role
         {
-            Name = "ADMIN"
+            Name = "admin"
         };
         
         dbContext.Roles.Add(adminRole);
@@ -104,7 +104,7 @@ public class RoleEndpointTests : IntegrationTestBase
 
         Role userRole = new Role
         {
-            Name = "USER"
+            Name = "user"
         };
         
         dbContext.Roles.Add(userRole);
@@ -139,7 +139,7 @@ public class RoleEndpointTests : IntegrationTestBase
 
         Role adminRole = new Role
         {
-            Name = "ADMIN"
+            Name = "admin"
         };
         
         dbContext.Roles.Add(adminRole);
@@ -190,7 +190,7 @@ public class RoleEndpointTests : IntegrationTestBase
 
         Role adminRole = new Role
         {
-            Name = "ADMIN"
+            Name = "admin"
         };
         
         dbContext.Roles.Add(adminRole);
@@ -225,7 +225,7 @@ public class RoleEndpointTests : IntegrationTestBase
 
         Role adminRole = new Role
         {
-            Name = "ADMIN"
+            Name = "admin"
         };
         
         dbContext.Roles.Add(adminRole);
@@ -271,7 +271,7 @@ public class RoleEndpointTests : IntegrationTestBase
 
         Role adminRole = new Role
         {
-            Name = "ADMIN"
+            Name = "admin"
         };
         
         dbContext.Roles.Add(adminRole);
@@ -294,7 +294,7 @@ public class RoleEndpointTests : IntegrationTestBase
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
         request.Content = JsonContent.Create(new RoleRequestDto
         {
-            Name = "USER"
+            Name = "user"
         });
         
         HttpResponseMessage response = await Fixture.Client!.SendAsync(request);
@@ -304,9 +304,9 @@ public class RoleEndpointTests : IntegrationTestBase
         var body = await response.Content.ReadFromJsonAsync<RoleResponseDto>();
         
         Assert.NotNull(body);
-        Assert.Equal("USER", body.Name);
+        Assert.Equal("user", body.Name);
         
-        Role? addedRole = await dbContext.Roles.AsNoTracking().SingleOrDefaultAsync(role => role.Name == "USER");
+        Role? addedRole = await dbContext.Roles.AsNoTracking().SingleOrDefaultAsync(role => role.Name == "user");
         
         Assert.NotNull(addedRole);
     }
@@ -330,7 +330,7 @@ public class RoleEndpointTests : IntegrationTestBase
 
         Role adminRole = new Role
         {
-            Name = "ADMIN"
+            Name = "admin"
         };
         
         dbContext.Roles.Add(adminRole);
@@ -388,14 +388,14 @@ public class RoleEndpointTests : IntegrationTestBase
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
         request.Content = JsonContent.Create(new RoleRequestDto
         {
-            Name = "USER"
+            Name = "user"
         });
         
         HttpResponseMessage response = await Fixture.Client!.SendAsync(request);
         
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
         
-        Role? addedRole = await dbContext.Roles.AsNoTracking().SingleOrDefaultAsync(role => role.Name == "USER");
+        Role? addedRole = await dbContext.Roles.AsNoTracking().SingleOrDefaultAsync(role => role.Name == "user");
         
         Assert.Null(addedRole);
     }
@@ -419,7 +419,7 @@ public class RoleEndpointTests : IntegrationTestBase
 
         Role adminRole = new Role
         {
-            Name = "ADMIN"
+            Name = "admin"
         };
         
         dbContext.Roles.Add(adminRole);
@@ -442,14 +442,14 @@ public class RoleEndpointTests : IntegrationTestBase
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
         request.Content = JsonContent.Create(new RoleRequestDto
         {
-            Name = "USER"
+            Name = "user"
         });
         
         HttpResponseMessage response = await Fixture.Client!.SendAsync(request);
         
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
         
-        Role? addedRole = await dbContext.Roles.AsNoTracking().SingleOrDefaultAsync(role => role.Name == "USER");
+        Role? addedRole = await dbContext.Roles.AsNoTracking().SingleOrDefaultAsync(role => role.Name == "user");
         
         Assert.Null(addedRole);
     }
@@ -473,7 +473,7 @@ public class RoleEndpointTests : IntegrationTestBase
 
         Role adminRole = new Role
         {
-            Name = "ADMIN"
+            Name = "admin"
         };
         
         dbContext.Roles.Add(adminRole);
@@ -481,7 +481,7 @@ public class RoleEndpointTests : IntegrationTestBase
 
         Role userRole = new Role
         {
-            Name = "USER"
+            Name = "user"
         };
         
         dbContext.Roles.Add(userRole);
@@ -504,7 +504,7 @@ public class RoleEndpointTests : IntegrationTestBase
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
         request.Content = JsonContent.Create(new RoleRequestDto
         {
-            Name = "CLIENT"
+            Name = "client"
         });
         
         HttpResponseMessage response = await Fixture.Client!.SendAsync(request);
@@ -514,7 +514,7 @@ public class RoleEndpointTests : IntegrationTestBase
         Role? updatedRole = await  dbContext.Roles.AsNoTracking().SingleOrDefaultAsync(role => role.Id ==  userRole.Id);
         
         Assert.NotNull(updatedRole);
-        Assert.Equal("CLIENT", updatedRole.Name);
+        Assert.Equal("client", updatedRole.Name);
     }
 
     [Fact]
@@ -536,7 +536,7 @@ public class RoleEndpointTests : IntegrationTestBase
 
         Role adminRole = new Role
         {
-            Name = "ADMIN"
+            Name = "admin"
         };
         
         dbContext.Roles.Add(adminRole);
@@ -544,7 +544,7 @@ public class RoleEndpointTests : IntegrationTestBase
 
         Role userRole = new Role
         {
-            Name = "USER"
+            Name = "user"
         };
         
         dbContext.Roles.Add(userRole);
@@ -577,7 +577,7 @@ public class RoleEndpointTests : IntegrationTestBase
         Role? updatedRole = await  dbContext.Roles.AsNoTracking().SingleOrDefaultAsync(role => role.Id ==  userRole.Id);
         
         Assert.NotNull(updatedRole);
-        Assert.Equal("USER", updatedRole.Name);
+        Assert.Equal("user", updatedRole.Name);
     }
 
     [Fact]
@@ -599,7 +599,7 @@ public class RoleEndpointTests : IntegrationTestBase
 
         Role userRole = new Role
         {
-            Name = "USER"
+            Name = "user"
         };
         
         dbContext.Roles.Add(userRole);
@@ -611,7 +611,7 @@ public class RoleEndpointTests : IntegrationTestBase
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
         request.Content = JsonContent.Create(new RoleRequestDto
         {
-            Name = "CLIENT"
+            Name = "client"
         });
         
         HttpResponseMessage response = await Fixture.Client!.SendAsync(request);
@@ -621,7 +621,7 @@ public class RoleEndpointTests : IntegrationTestBase
         Role? updatedRole = await  dbContext.Roles.AsNoTracking().SingleOrDefaultAsync(role => role.Id ==  userRole.Id);
         
         Assert.NotNull(updatedRole);
-        Assert.Equal("USER", updatedRole.Name);
+        Assert.Equal("user", updatedRole.Name);
     }
 
     [Fact]
@@ -643,7 +643,7 @@ public class RoleEndpointTests : IntegrationTestBase
 
         Role adminRole = new Role
         {
-            Name = "ADMIN"
+            Name = "admin"
         };
         
         dbContext.Roles.Add(adminRole);
@@ -651,7 +651,7 @@ public class RoleEndpointTests : IntegrationTestBase
 
         Role userRole = new Role
         {
-            Name = "USER"
+            Name = "user"
         };
         
         dbContext.Roles.Add(userRole);
@@ -674,7 +674,7 @@ public class RoleEndpointTests : IntegrationTestBase
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
         request.Content = JsonContent.Create(new RoleRequestDto
         {
-            Name = "CLIENT"
+            Name = "client"
         });
         
         HttpResponseMessage response = await Fixture.Client!.SendAsync(request);
@@ -684,7 +684,7 @@ public class RoleEndpointTests : IntegrationTestBase
         Role? updatedRole = await  dbContext.Roles.AsNoTracking().SingleOrDefaultAsync(role => role.Id ==  userRole.Id);
         
         Assert.NotNull(updatedRole);
-        Assert.Equal("USER", updatedRole.Name);
+        Assert.Equal("user", updatedRole.Name);
     }
 
     [Fact]
@@ -706,7 +706,7 @@ public class RoleEndpointTests : IntegrationTestBase
 
         Role adminRole = new Role
         {
-            Name = "ADMIN"
+            Name = "admin"
         };
         
         dbContext.Roles.Add(adminRole);
@@ -729,7 +729,7 @@ public class RoleEndpointTests : IntegrationTestBase
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
         request.Content = JsonContent.Create(new RoleRequestDto
         {
-            Name = "CLIENT"
+            Name = "client"
         });
         
         HttpResponseMessage response = await Fixture.Client!.SendAsync(request);
@@ -756,7 +756,7 @@ public class RoleEndpointTests : IntegrationTestBase
 
         Role adminRole = new Role
         {
-            Name = "ADMIN"
+            Name = "admin"
         };
         
         dbContext.Roles.Add(adminRole);
@@ -764,7 +764,7 @@ public class RoleEndpointTests : IntegrationTestBase
 
         Role userRole = new Role
         {
-            Name = "USER"
+            Name = "user"
         };
         
         dbContext.Roles.Add(userRole);
@@ -787,7 +787,7 @@ public class RoleEndpointTests : IntegrationTestBase
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
         request.Content = JsonContent.Create(new RoleRequestDto
         {
-            Name = "USER"
+            Name = "user"
         });
         
         HttpResponseMessage response = await Fixture.Client!.SendAsync(request);
@@ -797,7 +797,7 @@ public class RoleEndpointTests : IntegrationTestBase
         Role? updatedRole = await  dbContext.Roles.AsNoTracking().SingleOrDefaultAsync(role => role.Id ==  userRole.Id);
         
         Assert.NotNull(updatedRole);
-        Assert.Equal("USER", updatedRole.Name);
+        Assert.Equal("user", updatedRole.Name);
     }
 
     [Fact]
@@ -819,7 +819,7 @@ public class RoleEndpointTests : IntegrationTestBase
 
         Role adminRole = new Role
         {
-            Name = "ADMIN"
+            Name = "admin"
         };
         
         dbContext.Roles.Add(adminRole);
@@ -827,7 +827,7 @@ public class RoleEndpointTests : IntegrationTestBase
 
         Role userRole = new Role
         {
-            Name = "USER"
+            Name = "user"
         };
         
         dbContext.Roles.Add(userRole);
@@ -877,7 +877,7 @@ public class RoleEndpointTests : IntegrationTestBase
 
         Role userRole = new Role
         {
-            Name = "USER"
+            Name = "user"
         };
         
         dbContext.Roles.Add(userRole);
@@ -916,7 +916,7 @@ public class RoleEndpointTests : IntegrationTestBase
 
         Role adminRole = new Role
         {
-            Name = "ADMIN"
+            Name = "admin"
         };
         
         dbContext.Roles.Add(adminRole);
@@ -924,7 +924,7 @@ public class RoleEndpointTests : IntegrationTestBase
 
         Role userRole = new Role
         {
-            Name = "USER"
+            Name = "user"
         };
         
         dbContext.Roles.Add(userRole);
@@ -974,7 +974,7 @@ public class RoleEndpointTests : IntegrationTestBase
 
         Role adminRole = new Role
         {
-            Name = "ADMIN"
+            Name = "admin"
         };
         
         dbContext.Roles.Add(adminRole);
@@ -1020,7 +1020,7 @@ public class RoleEndpointTests : IntegrationTestBase
 
         Role adminRole = new Role
         {
-            Name = "ADMIN"
+            Name = "admin"
         };
         
         dbContext.Roles.Add(adminRole);
@@ -1070,7 +1070,7 @@ public class RoleEndpointTests : IntegrationTestBase
 
         Role adminRole = new Role
         {
-            Name = "ADMIN"
+            Name = "admin"
         };
         
         dbContext.Roles.Add(adminRole);
@@ -1132,7 +1132,7 @@ public class RoleEndpointTests : IntegrationTestBase
 
         Role adminRole = new Role
         {
-            Name = "ADMIN"
+            Name = "admin"
         };
         
         dbContext.Roles.Add(adminRole);
@@ -1183,7 +1183,7 @@ public class RoleEndpointTests : IntegrationTestBase
 
         Role adminRole = new Role
         {
-            Name = "ADMIN"
+            Name = "admin"
         };
         
         dbContext.Roles.Add(adminRole);
@@ -1245,7 +1245,7 @@ public class RoleEndpointTests : IntegrationTestBase
 
         Role adminRole = new Role
         {
-            Name = "ADMIN"
+            Name = "admin"
         };
         
         dbContext.Roles.Add(adminRole);
@@ -1299,7 +1299,7 @@ public class RoleEndpointTests : IntegrationTestBase
 
         Role adminRole = new Role
         {
-            Name = "ADMIN"
+            Name = "admin"
         };
         
         dbContext.Roles.Add(adminRole);
@@ -1353,7 +1353,7 @@ public class RoleEndpointTests : IntegrationTestBase
 
         Role adminRole = new Role
         {
-            Name = "ADMIN"
+            Name = "admin"
         };
         
         dbContext.Roles.Add(adminRole);
@@ -1427,7 +1427,7 @@ public class RoleEndpointTests : IntegrationTestBase
 
         Role adminRole = new Role
         {
-            Name = "ADMIN"
+            Name = "admin"
         };
         
         dbContext.Roles.Add(adminRole);
@@ -1490,7 +1490,7 @@ public class RoleEndpointTests : IntegrationTestBase
 
         Role adminRole = new Role
         {
-            Name = "ADMIN"
+            Name = "admin"
         };
         
         dbContext.Roles.Add(adminRole);
@@ -1564,7 +1564,7 @@ public class RoleEndpointTests : IntegrationTestBase
 
         Role adminRole = new Role
         {
-            Name = "ADMIN"
+            Name = "admin"
         };
         
         dbContext.Roles.Add(adminRole);
@@ -1618,7 +1618,7 @@ public class RoleEndpointTests : IntegrationTestBase
 
         Role adminRole = new Role
         {
-            Name = "ADMIN"
+            Name = "admin"
         };
         
         dbContext.Roles.Add(adminRole);

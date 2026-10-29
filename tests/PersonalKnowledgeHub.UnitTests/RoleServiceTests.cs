@@ -111,7 +111,7 @@ public class RoleServiceTests
     public async Task AddRole_WhenRoleDoesNotExist_ReturnsAddedRole()
     {
         int roleId = 1;
-        string roleName = "ROLE";
+        string roleName = "role";
 
         _roleRepository.Setup(x => x.IsRoleExistAsync(roleName, It.IsAny<CancellationToken>()))
             .ReturnsAsync(false);
@@ -210,12 +210,15 @@ public class RoleServiceTests
 
         _roleRepository.Setup(x => x.GetRoleByIdAsync(roleId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(role);
+        _roleRepository.Setup(x => x.IsRoleExistAsync(roleCurrentName, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
 
         Func<Task> result = () => _roleService.UpdateRoleById(roleId, roleNewName, CancellationToken.None);
         
         await Assert.ThrowsAsync<ConflictException>(result);
         
         _roleRepository.Verify(x => x.GetRoleByIdAsync(roleId, It.IsAny<CancellationToken>()), Times.Once);
+        _roleRepository.Verify(x => x.IsRoleExistAsync(roleCurrentName, It.IsAny<CancellationToken>()), Times.Once);
         _roleRepository.Verify(x => x.UpdateRoleAsync(It.IsAny<Role>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);   
     }
 
@@ -260,7 +263,7 @@ public class RoleServiceTests
     public async Task DeleteRoleById_WhenRoleIsAdmin_ThrowsConflictException()
     {
         int roleId = 1;
-        string roleName = "ADMIN";
+        string roleName = "admin";
 
         Role role = new Role
         {

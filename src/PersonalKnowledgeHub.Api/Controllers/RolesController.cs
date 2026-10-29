@@ -10,7 +10,7 @@ namespace PersonalKnowledgeHub.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    [Authorize(Roles = "ADMIN")]
+    [Authorize(Roles = "admin")]
     [Authorize(Policy = "ActiveAccount")]
     [EnableRateLimiting("crud")]
     public class RolesController : ControllerBase
@@ -29,7 +29,10 @@ namespace PersonalKnowledgeHub.Controllers
             List<Role> roles = await _roleService.GetRoles(cancellationToken);
             List<RoleResponseDto> roleResponses = roles.Select(role => new RoleResponseDto
             {
-                Name = role.Name
+                Id = role.Id,
+                Name = role.Name,
+                Permissions = role.RolePermissions.Select(rolePermission => 
+                        new PermissionProperties(rolePermission.PermissionId, rolePermission.Permission.Name)).ToList()
             }).ToList();
             return Ok(roleResponses);
         }
@@ -41,7 +44,10 @@ namespace PersonalKnowledgeHub.Controllers
             Role role = await _roleService.GetRoleById(id, cancellationToken);
             RoleResponseDto roleResponse = new RoleResponseDto
             {
-                Name = role.Name
+                Id = role.Id,
+                Name = role.Name,
+                Permissions = role.RolePermissions.Select(rolePermission => 
+                    new PermissionProperties(rolePermission.PermissionId, rolePermission.Permission.Name)).ToList()
             };
             return Ok(roleResponse);
         }
@@ -53,7 +59,10 @@ namespace PersonalKnowledgeHub.Controllers
             Role role = await _roleService.AddRole(roleRequest.Name, cancellationToken);
             RoleResponseDto roleResponse = new RoleResponseDto
             {
-                Name = role.Name
+                Id = role.Id,
+                Name = role.Name,
+                Permissions = role.RolePermissions.Select(rolePermission => 
+                    new PermissionProperties(rolePermission.PermissionId, rolePermission.Permission.Name)).ToList()
             };
             return CreatedAtAction(nameof(GetRoleById), new { id = role.Id }, roleResponse);
         }
@@ -81,7 +90,10 @@ namespace PersonalKnowledgeHub.Controllers
             Role role = await _roleService.AddPermissionToRole(roleId, permissionId, cancellationToken);
             RoleResponseDto roleResponse = new RoleResponseDto
             {
-                Name = role.Name
+                Id = role.Id,
+                Name = role.Name,
+                Permissions = role.RolePermissions.Select(rolePermission => 
+                    new PermissionProperties(rolePermission.PermissionId, rolePermission.Permission.Name)).ToList()
             };
             return CreatedAtAction(nameof(GetRoleById), new { id = role.Id }, roleResponse);
         }

@@ -36,6 +36,7 @@ public class UserMapper
     {
         return new UserResponseDto
         {
+            Id = user.Id,
             UserName = user.UserName ?? user.Email,
             Email = user.Email,
             CreatedAt = user.CreatedAt,
@@ -43,7 +44,7 @@ public class UserMapper
             BannedAt = user.BannedAt,
             Resources = user.Resources.Select(resource => resource.Title).ToList(),
             Tags = user.Tags.Select(tag => tag.Name).ToList(),
-            Roles = user.UserRoles.Select(userRole => userRole.Role.Name).ToList(),
+            Roles = user.UserRoles.Select(userRole => new RoleProperties(userRole.Role.Id, userRole.Role.Name)).ToList(),
         };
     }
     
@@ -64,6 +65,7 @@ public class UserMapper
         {
             Items = usersPageResult.Items.Select(user => new UserResponseDto
             {
+                Id = user.Id,
                 UserName = user.UserName ?? user.Email,
                 Email = user.Email,
                 CreatedAt = user.CreatedAt,
@@ -71,7 +73,7 @@ public class UserMapper
                 BannedAt = user.BannedAt,
                 Resources = user.Resources.Select(resource => resource.Title).ToList(),
                 Tags = user.Tags.Select(tag => tag.Name).ToList(),
-                Roles = user.UserRoles.Select(userRole => userRole.Role.Name).ToList(),
+                Roles = user.UserRoles.Select(userRole => new RoleProperties(userRole.Role.Id, userRole.Role.Name)).ToList(),
             }).ToList(),
             PageIndex = usersPageResult.PageIndex,
             PageSize = usersPageResult.PageSize,

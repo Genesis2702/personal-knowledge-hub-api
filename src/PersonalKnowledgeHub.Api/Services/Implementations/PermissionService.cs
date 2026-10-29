@@ -33,13 +33,14 @@ public class PermissionService : IPermissionService
 
     public async Task<Permission> AddPermission(string name, CancellationToken cancellationToken)
     {
-        if (await _permissionRepository.IsPermissionExistAsync(name, cancellationToken))
+        string normalizedName = name.Trim().ToLowerInvariant();
+        if (await _permissionRepository.IsPermissionExistAsync(normalizedName, cancellationToken))
         {
             throw new ConflictException("Permission already existed");
         }
         Permission permission = new Permission
         {
-            Name = name
+            Name = normalizedName
         };
         Permission addedPermission = await _permissionRepository.AddPermissionAsync(permission, cancellationToken);
         _logger.LogInformation("Permission {PermissionId} with name {PermissionName} added successfully", addedPermission.Id, addedPermission.Name);
@@ -53,7 +54,12 @@ public class PermissionService : IPermissionService
         {
             throw new NotFoundException("Permission not found");
         }
-        await _permissionRepository.UpdatePermissionAsync(permission, newName, cancellationToken);
+        string normalizedName = newName.Trim().ToLowerInvariant();
+        if (await _permissionRepository.IsPermissionExistAsync(normalizedName, cancellationToken))
+        {
+            throw new ConflictException("Permission already existed");
+        }
+        await _permissionRepository.UpdatePermissionAsync(permission, normalizedName, cancellationToken);
         _logger.LogInformation("Permission {PermissionId} with {PermissionName} updated successfully", 
             permission.Id, permission.Name);
     }
